@@ -54,6 +54,9 @@ int WINAPI CALLBACK WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPST
 			bool tExecuted = tCmd->execute(tBuffer + 1, tReadSize - 1, tResultBuffer, tResultSize);
 			if( !tExecuted )
 				return BadDataInBuffer;
+
+			if( 0 == tResultSize )
+				return ReturnBufferHasNoData;
 			
 			if( !tPipe.write(tResultBuffer, tResultSize) )
 				return FailedToWritePipe;
