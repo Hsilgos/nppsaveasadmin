@@ -10,7 +10,8 @@ enum Errors
 	ErrorCommandExecution,
 	UnknownCommand,
 	BadDataInBuffer,
-	FailedToWritePipe
+	FailedToWritePipe,
+	ReturnBufferHasNoData
 };
 
 // commands

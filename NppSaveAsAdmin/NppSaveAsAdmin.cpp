@@ -1,20 +1,3 @@
-//this file is part of notepad++
-//Copyright (C)2003 Don HO <donho@altern.org>
-//
-//This program is free software; you can redistribute it and/or
-//modify it under the terms of the GNU General Public License
-//as published by the Free Software Foundation; either
-//version 2 of the License, or (at your option) any later version.
-//
-//This program is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
-//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//GNU General Public License for more details.
-//
-//You should have received a copy of the GNU General Public License
-//along with this program; if not, write to the Free Software
-//Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 #include "PluginDefinition.h"
 
 #include <map>
@@ -39,8 +22,8 @@ struct MyFileHandle
 
 
 typedef std::map<HANDLE, MyFileHandle *> HandleMap;
-HandleMap myHandles;
-std::set<std::wstring> allowedFiles;
+HandleMap				myHandles;
+std::set<std::wstring>	allowedFiles;
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -169,40 +152,12 @@ DWORD WINAPI MyGetFileType(HANDLE aHandle)
 {
 	HandleMap::iterator it = myHandles.find(aHandle);
 	if( it != myHandles.end() )
-	{
-		return FILE_TYPE_DISK;
-	}
+		return ExecuteGetFileType(it->second->pipe, it->second->originHandle);
 	else
-	{
 		return getFileFunctions().getFileType(aHandle);
-	}
 }
+
 //////////////////////////////////////////////////////////////////////////
-
-/*
-void doInjection()
-{
-	doInjection(TEXT("Kernel32.dll"), "WriteFile",		getFileFunctions().writeFile,	&MyWriteFileProc);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileA",	getFileFunctions().createFileA,	&MyCreateFileA);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileW",	getFileFunctions().createFileW,	&MyCreateFileW);
-	doInjection(TEXT("Kernel32.dll"), "CloseHandle",	getFileFunctions().closeHandle,	&MyCloseHandle);
-	doInjection(TEXT("Kernel32.dll"), "GetFileType",	getFileFunctions().getFileType,	&MyGetFileType);
-}*/
-
-
-/*
-void unDoInjection()
-{
-	FileFunctions tDummy;
-
-	doInjection(TEXT("Kernel32.dll"), "WriteFile",		tDummy.writeFile,	getFileFunctions().writeFile);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileA",	tDummy.createFileA,	getFileFunctions().createFileA);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileW",	tDummy.createFileW,	getFileFunctions().createFileW);
-	doInjection(TEXT("Kernel32.dll"), "CloseHandle",	tDummy.closeHandle,	getFileFunctions().closeHandle);
-	doInjection(TEXT("Kernel32.dll"), "GetFileType",	tDummy.getFileType,	getFileFunctions().getFileType);
-}*/
-
-
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  reasonForCall, 
@@ -305,12 +260,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // http://sourceforge.net/forum/forum.php?forum_id=482781
 //
 extern "C" __declspec(dllexport) LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
-{/*
-	if (Message == WM_MOVE)
-	{
-		::MessageBox(NULL, "move", "", MB_OK);
-	}
-*/
+{
 	return TRUE;
 }
 

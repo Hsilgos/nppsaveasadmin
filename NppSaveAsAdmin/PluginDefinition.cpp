@@ -20,6 +20,9 @@
 
 #include "FileOperations.h"
 
+#include <sstream>
+#include <vector>
+
 //
 // The plugin data that Notepad++ needs
 //
@@ -30,11 +33,54 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
+std::wstring gVersion;
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
+static std::wstring getPath(HANDLE hModule)
+{
+	TCHAR moduleFile [2048] = { 0 };
+	const int tResultSize = GetModuleFileName ((HMODULE)hModule, moduleFile, 2048);
+	return std::wstring(moduleFile, tResultSize);
+}
+
+static std::wstring getExeVersion (const std::wstring& exeFileName, const std::wstring& fieldName)
+{
+	DWORD pointlessWin32Variable = 0;
+	DWORD size = GetFileVersionInfoSizeW (exeFileName.c_str(), &pointlessWin32Variable);
+
+	if (size > 0)
+	{
+		std::vector<char> exeInfo;
+		exeInfo.resize(size);
+
+		if (GetFileVersionInfoW (exeFileName.c_str(), 0, size, &exeInfo[0]))
+		{
+			wchar_t* result = 0;
+			unsigned int resultLen = 0;
+
+			// try the 1200 codepage (Unicode)
+			std::wstring queryStr (L"\\StringFileInfo\\041904B0\\" + fieldName);
+
+			if ( !VerQueryValueW (&exeInfo[0], queryStr.c_str(), (void**) &result, &resultLen) )
+			{
+				// try the 1252 codepage (Windows Multilingual)
+				queryStr = L"\\StringFileInfo\\041904E4\\" + fieldName;
+				VerQueryValueW (&exeInfo[0], queryStr.c_str(), (void**) &result, &resultLen);
+			}
+
+			if( result && resultLen > 0 )
+				return std::wstring (result, resultLen - 1);
+		}
+	}
+
+	return std::wstring();
+}
+
 void pluginInit(HANDLE hModule)
 {
+	gVersion = getExeVersion(getPath(hModule), L"FileVersion");
 }
 
 //
@@ -50,17 +96,6 @@ void unDoInjection();
 // You should fill your plugins commands here
 void commandMenuInit()
 {
-
-    //--------------------------------------------//
-    //-- STEP 3. CUSTOMIZE YOUR PLUGIN COMMANDS --//
-    //--------------------------------------------//
-    // with function :
-    // setCommand(int index,                      // zero based number to indicate the order of command
-    //            TCHAR *commandName,             // the command name that you want to see in plugin menu
-    //            PFUNCPLUGINCMD functionPointer, // the symbol of function (function pointer) associated with this command. The body should be defined below. See Step 4.
-    //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
-    //            bool check0nInit                // optional. Make this menu item be checked visually
-    //            );
     setCommand(0, TEXT("About"), about, NULL, false);
 
 	if( isDebugging() )
@@ -103,24 +138,14 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
 
-void hello()
-{
-    // Open a new document
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
 
-    // Get the current scintilla
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
-        return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
-
-    // Say hello now :
-    // Scintilla control has no Unicode mode, so we use (char *) here
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"Hello, Notepad++!");
-}
 
 void about()
 {
-	::MessageBox(NULL, TEXT("Notepad++ SaveAsAdmin plugin\nVersion 1.0.0.1\nAuthor: Khnykin Evgeniy"), TEXT("About"), MB_OK);
+	std::wstringstream tInfo;
+	tInfo << L"Notepad++ SaveAsAdmin plugin" << std::endl;
+	tInfo << L"Version: "<< gVersion << std::endl;
+	tInfo << L"Author: Khnykin Evgeniy";
+
+	::MessageBox(NULL, tInfo.str().c_str(), TEXT("About"), MB_OK);
 }

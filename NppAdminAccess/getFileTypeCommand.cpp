@@ -24,6 +24,8 @@ bool GetFileTypeCommand::execute( const void *aData, int aDataSize, void *aRetDa
 	tResult->type = GetFileType(tgft->handle);
 	tResult->lastError = GetLastError();
 
+	aRetDataSize = sizeof GetFileTypeResult;
+
 	return true;
 }
 

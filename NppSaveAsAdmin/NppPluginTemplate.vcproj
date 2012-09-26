@@ -221,7 +221,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib  Dbghelp.lib Psapi.lib"
+				AdditionalDependencies="shlwapi.lib  Dbghelp.lib Psapi.lib Version.lib"
 				OutputFile="$(OutDir)/NppSaveAsAdmin.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -303,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib Dbghelp.lib Psapi.lib"
+				AdditionalDependencies="shlwapi.lib Dbghelp.lib Psapi.lib Version.lib"
 				OutputFile="$(OutDir)/NppSaveAsAdmin_Debug.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -358,7 +358,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\NppPluginDemo.cpp"
+				RelativePath=".\NppSaveAsAdmin.cpp"
 				>
 			</File>
 			<File
@@ -408,11 +408,11 @@
 				>
 			</File>
 			<File
-				RelativePath="DockingFeature\resource.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath="DockingFeature\resource.h"
 				>
 			</File>
 			<File
