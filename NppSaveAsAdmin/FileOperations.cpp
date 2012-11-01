@@ -1,5 +1,6 @@
 #include "FileOperations.h"
 
+#include <Shlwapi.h>
 
 FileFunctions &getFileFunctions()
 {
@@ -32,10 +33,10 @@ void AppendNewPtr(PROC *aPtrToFunMemory, Proc aPtrToNewFun)
 };
 
 template<class Proc>
-void doInjection(const WCHAR *aModuleName, const char *aFunctionName, Proc &aSaveOldToPtr, Proc aPtrToNewFun)
+void doInjection(const char *aModuleName, const char *aFunctionName, Proc &aSaveOldToPtr, Proc aPtrToNewFun)
 {
 	const size_t tNameLen = strnlen(aFunctionName, 64);
-	HMODULE hModule = GetModuleHandle(aModuleName);
+	HMODULE hModule = GetModuleHandle(NULL);
 
 	if( hModule )
 	{
@@ -43,6 +44,17 @@ void doInjection(const WCHAR *aModuleName, const char *aFunctionName, Proc &aSav
 
 		PIMAGE_IMPORT_DESCRIPTOR pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)
 			ImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
+
+		while (pImportDesc->Name)
+		{
+			if (0 == StrCmpIA((char*)((PBYTE)hModule+pImportDesc->Name),aModuleName))
+				break;
+
+			++pImportDesc;
+		}
+
+		if (!pImportDesc->Name)
+			return;
 
 		if( pImportDesc )
 		{
@@ -98,11 +110,11 @@ DWORD WINAPI MyGetFileType(HANDLE aHandle);
 
 void doInjection()
 {
-	doInjection(TEXT("Kernel32.dll"), "WriteFile",		getFileFunctions().writeFile,	&MyWriteFileProc);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileA",	getFileFunctions().createFileA,	&MyCreateFileA);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileW",	getFileFunctions().createFileW,	&MyCreateFileW);
-	doInjection(TEXT("Kernel32.dll"), "CloseHandle",	getFileFunctions().closeHandle,	&MyCloseHandle);
-	doInjection(TEXT("Kernel32.dll"), "GetFileType",	getFileFunctions().getFileType,	&MyGetFileType);
+	doInjection("Kernel32.dll", "WriteFile",		getFileFunctions().writeFile,	&MyWriteFileProc);
+	doInjection("Kernel32.dll", "CreateFileA",	getFileFunctions().createFileA,	&MyCreateFileA);
+	doInjection("Kernel32.dll", "CreateFileW",	getFileFunctions().createFileW,	&MyCreateFileW);
+	doInjection("Kernel32.dll", "CloseHandle",	getFileFunctions().closeHandle,	&MyCloseHandle);
+	doInjection("Kernel32.dll", "GetFileType",	getFileFunctions().getFileType,	&MyGetFileType);
 }
 
 
@@ -110,10 +122,10 @@ void unDoInjection()
 {
 	FileFunctions tDummy;
 
-	doInjection(TEXT("Kernel32.dll"), "WriteFile",		tDummy.writeFile,	getFileFunctions().writeFile);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileA",	tDummy.createFileA,	getFileFunctions().createFileA);
-	doInjection(TEXT("Kernel32.dll"), "CreateFileW",	tDummy.createFileW,	getFileFunctions().createFileW);
-	doInjection(TEXT("Kernel32.dll"), "CloseHandle",	tDummy.closeHandle,	getFileFunctions().closeHandle);
-	doInjection(TEXT("Kernel32.dll"), "GetFileType",	tDummy.getFileType,	getFileFunctions().getFileType);
+	doInjection("Kernel32.dll", "WriteFile",		tDummy.writeFile,	getFileFunctions().writeFile);
+	doInjection("Kernel32.dll", "CreateFileA",	tDummy.createFileA,	getFileFunctions().createFileA);
+	doInjection("Kernel32.dll", "CreateFileW",	tDummy.createFileW,	getFileFunctions().createFileW);
+	doInjection("Kernel32.dll", "CloseHandle",	tDummy.closeHandle,	getFileFunctions().closeHandle);
+	doInjection("Kernel32.dll", "GetFileType",	tDummy.getFileType,	getFileFunctions().getFileType);
 }
 
