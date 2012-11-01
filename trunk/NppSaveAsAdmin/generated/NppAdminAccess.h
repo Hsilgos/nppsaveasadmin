@@ -3,7 +3,7 @@
 /*  change it manually.                                                 */
 /************************************************************************/
 // Original filename: ./Release/NppAdminAccess.exe
-// Generation date and time: Wednesday, September 26, 2012 09:29:15
+// Generation date and time: Friday, November 02, 2012 12:25:34
 
 
 #pragma once
