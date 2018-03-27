@@ -1,155 +1,100 @@
-#include "pipe.h"
-
+#include "Pipe.h"
 
 #include <set>
 //////////////////////////////////////////////////////////////////////////
 
-std::set<std::wstring> &getIdMap()
-{
-	static std::set<std::wstring> tMap;
-	return tMap;
+namespace {
+std::wstring generate_random_string(int length) {
+  static bool is_initialized = false;
+  if (!is_initialized)
+    srand(GetTickCount());
+
+  const wchar_t random_map[] = L"1234567890";
+  const size_t map_size = sizeof(random_map) / sizeof(random_map[0]);
+
+  std::wstring result;
+  result.reserve(length);
+
+  for (int i = 0; i < length; ++i)
+    result.append(1, random_map[rand() * (map_size - 1) / RAND_MAX]);
+
+  return result;
 }
 
-bool isUnique(const std::wstring &aId)
-{
-	return getIdMap().find(aId) == getIdMap().end();
-}
-
-void freeId(const std::wstring &aId)
-{
-	std::set<std::wstring>::iterator it = getIdMap().find(aId);
-	if( it != getIdMap().end() )
-		getIdMap().erase(it);
-}
-
-std::wstring doGen(int aLen)
-{
-	static bool tInitialized = false;
-	if(!tInitialized)
-		srand(GetTickCount());
-
-	const char random_map[] = "1234567890";
-
-	std::wstring tResult;
-
-	for( int i = 0; i < aLen; ++i )
-		tResult.append(1, random_map[rand()*(sizeof(random_map) - 1)/RAND_MAX] );
-
-	return tResult;
-}
-
-std::wstring generateName()
-{
-	std::wstring tResult;
-
-	do 
-	{
-		tResult = L"\\\\.\\pipe\\npp_";
-		tResult += doGen(5);
-
-	} while ( !isUnique(tResult) );
-
-	getIdMap().insert(tResult);
-
-	return tResult;
-}
+const int MaxBufferSize = 1024 * 4;
+}  // namespace
 
 //////////////////////////////////////////////////////////////////////////
 
-pipe::pipe()
-	:mPipe(NULL)
-{
+Pipe::Pipe(HANDLE pipe, std::wstring name)
+    : m_pipe(pipe), m_name(std::move(name)) {}
+
+Pipe::~Pipe() {
+  if (m_pipe && m_pipe != INVALID_HANDLE_VALUE) {
+    CloseHandle(m_pipe);
+  }
 }
 
-pipe::~pipe()
-{
-	close();
+std::unique_ptr<Pipe> Pipe::create(HANDLE pipe, std::wstring name) {
+  return std::unique_ptr<Pipe>(new Pipe(pipe, name));
 }
 
-bool pipe::create(const std::wstring &aName)
-{
-	close();
+std::unique_ptr<Pipe> Pipe::create(const std::wstring& name) {
+  HANDLE pipe = CreateNamedPipe(
+      name.c_str(),                                  // pipe's name
+      PIPE_ACCESS_DUPLEX /*|FILE_FLAG_OVERLAPPED*/,  //
+      PIPE_TYPE_BYTE, 1, MaxBufferSize, MaxBufferSize, 10000, NULL);
 
-	mName = aName;
+  if (pipe == INVALID_HANDLE_VALUE)
+    return nullptr;
 
-	HANDLE tPipe = CreateNamedPipe(
-		aName.c_str(),			//pipe's name
-		PIPE_ACCESS_DUPLEX		/*|FILE_FLAG_OVERLAPPED*/,		//
-		PIPE_TYPE_BYTE,
-		1,
-		MaxBufferSize,
-		MaxBufferSize,
-		10000,
-		NULL);
-
-	if (tPipe == INVALID_HANDLE_VALUE)
-		return false;
-
-	mPipe = tPipe;
-
-	return true;
+  return create(pipe, name);
 }
 
+std::unique_ptr<Pipe> Pipe::create_unique() {
+  std::unique_ptr<Pipe> result;
+  do {
+    std::wstring name = L"\\\\.\\pipe\\npp_";
+    name += generate_random_string(5);
+    result = create(name);
+  } while (!result);
 
-bool pipe::createUnique()
-{
-	return create(generateName());
+  return result;
 }
 
-bool pipe::open(const std::wstring &aName)
-{
-	close();
+std::unique_ptr<Pipe> Pipe::open(const std::wstring& name) {
+  HANDLE pipe =
+      CreateFile(name.c_str(),                  // pipe's name
+                 GENERIC_READ | GENERIC_WRITE,  // only need read access
+                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                 FILE_ATTRIBUTE_NORMAL, NULL);
 
-	HANDLE tPipe = CreateFile(
-		aName.c_str(), //pipe's name
-		GENERIC_READ | GENERIC_WRITE, // only need read access
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		NULL,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);
+  if (pipe == INVALID_HANDLE_VALUE)
+    return nullptr;
 
-	if (tPipe == INVALID_HANDLE_VALUE)
-		return false;
-
-	mPipe = tPipe;
-
-	return true;
+  return create(pipe, name);
 }
 
-bool pipe::read(void *aBuffer, int aBufSize, DWORD &aReadSize)
-{
-	const BOOL tReadResult = ReadFile(mPipe, aBuffer, aBufSize, &aReadSize, NULL);
-	return TRUE == tReadResult;
+bool Pipe::read(std::vector<char>& data) {
+  DWORD read_size = 0;
+  data.resize(MaxBufferSize);
+  const bool result =
+      TRUE == ReadFile(m_pipe, data.data(), data.size(), &read_size, NULL);
+  data.resize(result ? read_size : 0);
+  return result;
 }
 
-bool pipe::write(const void *aBuffer, int aBufSize)
-{
-	DWORD tWritten = 0;
-	const BOOL tResult = WriteFile(mPipe, aBuffer, aBufSize, &tWritten, NULL);
-	return TRUE == tResult && tWritten == aBufSize;
+bool Pipe::write(const std::vector<char>& data) {
+  DWORD written = 0;
+  const BOOL result =
+      WriteFile(m_pipe, data.data(), data.size(), &written, NULL);
+  return TRUE == result && written == data.size();
 }
 
-void pipe::close()
-{
-	if( mPipe && mPipe != INVALID_HANDLE_VALUE )
-	{
-		CloseHandle(mPipe);
-		mPipe = NULL;
-		freeId(mName);
-		mName.clear();
-	}
+const std::wstring& Pipe::get_name() const {
+  return m_name;
 }
 
-const std::wstring &pipe::getName() const
-{
-	return mName;
+bool Pipe::wait() const {
+  return TRUE == ConnectNamedPipe(m_pipe, NULL);
 }
-
-bool pipe::wait()
-{
-	BOOL ret = ConnectNamedPipe(mPipe, NULL);
-
-	return TRUE == ret;
-}
-
