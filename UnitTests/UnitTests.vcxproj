@@ -91,12 +91,12 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\libsl\googletest_release\x86\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\projects\googletest_release\x86\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\libsl\googletest_release\x86\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\projects\googletest_release\x86\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>gmock_maind.lib;Dbghelp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -109,12 +109,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\libsl\googletest_release\x64\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\projects\googletest_release\x64\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\libsl\googletest_release\x64\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\projects\googletest_release\x64\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>gmock_maind.lib;Dbghelp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -129,14 +129,14 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\libsl\googletest_release\x86\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\projects\googletest_release\x86\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\libsl\googletest_release\x86\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\projects\googletest_release\x86\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>gmock_main.lib;Dbghelp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -151,14 +151,14 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile />
-      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\libsl\googletest_release\x64\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../NppAdminAccessLib;../NppSaveAsAdminLib;../NppCommon;C:\projects\googletest_release\x64\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\libsl\googletest_release\x64\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\projects\googletest_release\x64\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>gmock_main.lib;Dbghelp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
