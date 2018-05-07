@@ -43,7 +43,7 @@ class InjectionFixture : public ::testing::Test {
         std::make_unique<::testing::NiceMock<MockFileOperations>>();
   }
   ~InjectionFixture() {
-    s_file_operations.release();
+    s_file_operations.reset();
     std::remove(TestFileName1);
   }
   void configure_mock_default() {
@@ -130,7 +130,7 @@ TEST_F(InjectionFixture, CreteFileIsHookedAndReleased) {
 
 TEST_F(InjectionFixture, CallOriginalFunctionAfterHook) {
   EXPECT_CALL(*s_file_operations, TestCreateFileA(_, _, _, _, _, _, _))
-      .WillOnce(Return(ValidHandle));
+    .Times(0);
   auto create_file = inject("Kernel32.dll", "CreateFileA", &TestCreateFileA);
   HANDLE file_handle =
       create_file->call_original(TestFileName1, GENERIC_WRITE, 0, NULL,

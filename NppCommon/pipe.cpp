@@ -78,16 +78,18 @@ std::unique_ptr<Pipe> Pipe::open(const std::wstring& name) {
 bool Pipe::read(std::vector<char>& data) {
   DWORD read_size = 0;
   data.resize(MaxBufferSize);
+  const DWORD buffer_size = static_cast<DWORD>(data.size());
   const bool result =
-      TRUE == ReadFile(m_pipe, data.data(), data.size(), &read_size, NULL);
+      TRUE == ReadFile(m_pipe, data.data(), buffer_size, &read_size, NULL);
   data.resize(result ? read_size : 0);
   return result;
 }
 
 bool Pipe::write(const std::vector<char>& data) {
   DWORD written = 0;
+  const DWORD buffer_size = static_cast<DWORD>(data.size());
   const BOOL result =
-      WriteFile(m_pipe, data.data(), data.size(), &written, NULL);
+      WriteFile(m_pipe, data.data(), buffer_size, &written, NULL);
   return TRUE == result && written == data.size();
 }
 
