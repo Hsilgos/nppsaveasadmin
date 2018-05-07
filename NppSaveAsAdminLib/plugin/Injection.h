@@ -81,22 +81,22 @@ class ScopedInjector {
   const char* m_module;
   const char* m_function;
   typedef Ret(WINAPI* WinapiFunctionPointer)(Args...);
-  WinapiFunctionPointer m_save_old_to_ptr = nullptr;
+  WinapiFunctionPointer m_original_function_ptr = nullptr;
 
  public:
   ScopedInjector(const char* module,
                  const char* function,
                  WinapiFunctionPointer ptr_to_new_fun)
       : m_module(module), m_function(function) {
-    process_injection(m_module, m_function, m_save_old_to_ptr, ptr_to_new_fun);
+    process_injection(m_module, m_function, m_original_function_ptr, ptr_to_new_fun);
   }
 
   ~ScopedInjector() {
     WinapiFunctionPointer dummy;
-    process_injection(m_module, m_function, dummy, m_save_old_to_ptr);
+    process_injection(m_module, m_function, dummy, m_original_function_ptr);
   }
 
-  Ret call_original(Args... args) { return m_save_old_to_ptr(args...); }
+  Ret call_original(Args... args) { return m_original_function_ptr(args...); }
 
   using Pointer = std::unique_ptr<ScopedInjector<Ret, Args...>>;
 };

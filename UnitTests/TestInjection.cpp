@@ -40,7 +40,7 @@ class InjectionFixture : public ::testing::Test {
   InjectionFixture() {
     std::remove(TestFileName1);
     s_file_operations =
-        std::make_unique<::testing::NiceMock<MockFileOperations>>();
+        std::make_unique<::testing::StrictMock<MockFileOperations>>();
   }
   ~InjectionFixture() {
     s_file_operations.reset();
@@ -54,7 +54,7 @@ class InjectionFixture : public ::testing::Test {
     ON_CALL(*s_file_operations, TestCloseHandle(_)).WillByDefault(Return(TRUE));
   }
 
-  static std::unique_ptr<::testing::NiceMock<MockFileOperations>>
+  static std::unique_ptr<::testing::StrictMock<MockFileOperations>>
       s_file_operations;
 
   static HANDLE WINAPI
@@ -107,7 +107,7 @@ class InjectionFixture : public ::testing::Test {
   }
 };
 
-std::unique_ptr<::testing::NiceMock<MockFileOperations>>
+std::unique_ptr<::testing::StrictMock<MockFileOperations>>
     InjectionFixture::s_file_operations;
 
 TEST_F(InjectionFixture, WriteFileWithoutInjection) {
@@ -115,7 +115,7 @@ TEST_F(InjectionFixture, WriteFileWithoutInjection) {
   check_file_exists();
 }
 
-TEST_F(InjectionFixture, CreteFileIsHookedAndReleased) {
+TEST_F(InjectionFixture, CreateFileIsHookedAndReleased) {
   EXPECT_CALL(*s_file_operations, TestCreateFileA(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle));
   auto create_file = inject("Kernel32.dll", "CreateFileA", &TestCreateFileA);
@@ -144,7 +144,12 @@ TEST_F(InjectionFixture, CallOriginalFunctionAfterHook) {
 }
 
 TEST_F(InjectionFixture, WriteFileWithInjection) {
-  configure_mock_default();
+  EXPECT_CALL(*s_file_operations, TestCreateFileA(_, _, _, _, _, _, _))
+    .WillOnce(Return(ValidHandle));
+  EXPECT_CALL(*s_file_operations, TestWriteFile(_, _, _, _, _))
+    .WillOnce(Return(TRUE));
+  EXPECT_CALL(*s_file_operations, TestCloseHandle(_))
+    .WillOnce(Return(TRUE));
 
   auto create_file = inject("Kernel32.dll", "CreateFileA", &TestCreateFileA);
   auto write_file = inject("Kernel32.dll", "WriteFile", &TestWriteFile);
