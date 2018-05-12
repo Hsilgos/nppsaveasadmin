@@ -37,26 +37,11 @@ typedef WINBASEAPI BOOL(WINAPI* CloseHandleProc)(HANDLE hObject);
 typedef WINBASEAPI DWORD(WINAPI* GetFileTypeProc)(HANDLE hFile);
 
 struct FileFunctions {
-  ScopedInjector<BOOL, HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED>::Pointer
-      write_file;
-  ScopedInjector<HANDLE,
-                 LPCSTR,
-                 DWORD,
-                 DWORD,
-                 LPSECURITY_ATTRIBUTES,
-                 DWORD,
-                 DWORD,
-                 HANDLE>::Pointer create_filea;
-  ScopedInjector<HANDLE,
-                 LPCWSTR,
-                 DWORD,
-                 DWORD,
-                 LPSECURITY_ATTRIBUTES,
-                 DWORD,
-                 DWORD,
-                 HANDLE>::Pointer create_filew;
-  ScopedInjector<BOOL, HANDLE>::Pointer close_handle;
-  ScopedInjector<DWORD, HANDLE>::Pointer get_file_type;
+  injection_ptr_type(WriteFile) write_file;
+  injection_ptr_type(CreateFileA) create_filea;
+  injection_ptr_type(CreateFileW) create_filew;
+  injection_ptr_type(GetFileType) get_file_type;
+  injection_ptr_type(CloseHandle) close_handle;
 };
 
 /*

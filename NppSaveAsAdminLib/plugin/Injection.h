@@ -1,7 +1,14 @@
 #pragma once
 
 #include <Shlwapi.h>
+#include <iostream>
+
+#include <atomic>
+#include <functional>
 #include <memory>
+
+const std::uint32_t MaxModuleNameLen = 128;
+const std::uint32_t MaxFunctionNameLen = 64;
 
 inline void append_new_ptr_impl(PROC* ptr_to_fun_memory, PROC ptr_to_new_fun) {
   MEMORY_BASIC_INFORMATION mbi = {0};
@@ -23,16 +30,29 @@ void append_new_ptr(PROC* ptr_to_fun_memory, Proc ptr_to_new_fun) {
                       reinterpret_cast<PROC>(ptr_to_new_fun));
 };
 
+inline bool name_is_suitable(const char* desired_module_name,
+                             HMODULE module_handle,
+                             PIMAGE_IMPORT_DESCRIPTOR import_description) {
+  return !desired_module_name ||
+         0 == StrCmpIA((char*)((PBYTE)module_handle + import_description->Name),
+                       desired_module_name);
+}
+
 template <class Proc>
-void process_injection(const char* module_name,
-                       const char* function_name,
-                       Proc& save_old_to_ptr,
-                       Proc ptr_to_new_fun) {
-  const size_t name_length = strnlen(function_name, 64);
+struct InjectionResult {
+  PROC* old_function_position = nullptr;
+  Proc old_function = nullptr;
+};
+
+template <class Proc>
+InjectionResult<Proc> process_injection(const char* module_name,
+                                        const char* function_name,
+                                        Proc ptr_to_new_fun) {
+  const size_t name_length = strnlen(function_name, MaxFunctionNameLen);
   HMODULE module_handle = GetModuleHandle(NULL);
 
   if (!module_handle)
-    return;
+    throw std::logic_error("Failed to retrieve module handle");
 
   ULONG description_size = 0;
 
@@ -40,15 +60,14 @@ void process_injection(const char* module_name,
       (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(
           module_handle, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &description_size);
 
-  while (import_description && import_description->Name) {
-    if (0 == StrCmpIA((char*)((PBYTE)module_handle + import_description->Name),
-                      module_name))
+  for (; import_description && import_description->Name; ++import_description) {
+    if (name_is_suitable(module_name, module_handle, import_description))
       break;
-
-    ++import_description;
   }
 
-  while (import_description && import_description->Name) {
+  for (; import_description && import_description->Name; ++import_description) {
+    if (!name_is_suitable(module_name, module_handle, import_description))
+      break;
     PIMAGE_THUNK_DATA thunk = (PIMAGE_THUNK_DATA)(
         (PBYTE)module_handle + import_description->FirstThunk);
     PIMAGE_THUNK_DATA thunk_orig = (PIMAGE_THUNK_DATA)(
@@ -62,49 +81,132 @@ void process_injection(const char* module_name,
 
       if (0 ==
           strncmp(function_name, (const char*)image_name->Name, name_length)) {
-        save_old_to_ptr = (Proc)(PROC)*ppfn;
+        InjectionResult<Proc> result;
+        result.old_function_position = ppfn;
+        result.old_function = (Proc)(PROC)*ppfn;
         append_new_ptr(ppfn, ptr_to_new_fun);
 
-        return;
+        return result;
       }
 
       thunk++;
       thunk_orig++;
     }
-
-    import_description++;
   }
+  std::stringstream error_info;
+  error_info << "Injected function '" << function_name << "' ";
+  if (module_name) {
+    error_info << "in module '" << module_name << "' ";
+  }
+  error_info << "was not found";
+  throw std::logic_error(error_info.str());
 }
 
 template <class Ret, class... Args>
 class ScopedInjector {
-  const char* m_module;
-  const char* m_function;
   typedef Ret(WINAPI* WinapiFunctionPointer)(Args...);
-  WinapiFunctionPointer m_original_function_ptr = nullptr;
+
+  struct Data {
+    InjectionResult<WinapiFunctionPointer> injection_result;
+    std::function<Ret(Args... args)> callback;
+  };
+
+  Data* m_data = nullptr;
+
+  template <class Unique>
+  struct StaticFunctionWrapper {
+    static Data data;
+    static Ret WINAPI injected_function(Args... args) {
+      if (data.callback) {
+        return data.callback(args...);
+      }
+      return data.injection_result.old_function(args...);
+    }
+  };
 
  public:
-  ScopedInjector(const char* module,
+  template <class Unique>
+  ScopedInjector(Unique,
+                 const char* module,
                  const char* function,
-                 WinapiFunctionPointer ptr_to_new_fun)
-      : m_module(module), m_function(function) {
-    process_injection(m_module, m_function, m_original_function_ptr, ptr_to_new_fun);
+                 std::function<Ret(Args...)> callback) {
+    static StaticFunctionWrapper<Unique> static_function;
+    if (static_function.data.callback) {
+      throw std::logic_error(
+          "You can't use same injection macro to "
+          " inject same function more than once");
+    }
+    static_function.data.callback = callback;
+    m_data = &static_function.data;
+    static_function.data.injection_result =
+        process_injection(module, function, static_function.injected_function);
   }
 
   ~ScopedInjector() {
-    WinapiFunctionPointer dummy;
-    process_injection(m_module, m_function, dummy, m_original_function_ptr);
+    m_data->callback = nullptr;
+    append_new_ptr(m_data->injection_result.old_function_position,
+                   m_data->injection_result.old_function);
   }
 
-  Ret call_original(Args... args) { return m_original_function_ptr(args...); }
+  Ret call_original(Args... args) {
+    return m_data->injection_result.old_function(args...);
+  }
 
   using Pointer = std::unique_ptr<ScopedInjector<Ret, Args...>>;
 };
 
 template <class Ret, class... Args>
-auto inject(const char* module,
-            const char* function,
-            Ret(WINAPI* ptr_to_new_fun)(Args...)) {
-  return std::make_unique<ScopedInjector<Ret, Args...>>(module, function,
-                                                        ptr_to_new_fun);
+template <class Unique>
+typename ScopedInjector<Ret, Args...>::Data
+    ScopedInjector<Ret, Args...>::StaticFunctionWrapper<Unique>::data;
+
+template <class Unique, class Ret, class... Args>
+auto make_inject(const char* module,
+                 const char* function,
+                 Ret(WINAPI* ptr_to_original_fun)(Args...),
+                 std::function<Ret(Args...)> new_function) {
+  Unique unique;
+  return std::make_unique<ScopedInjector<Ret, Args...>>(unique, module,
+                                                        function, new_function);
+}
+
+template <class Unique, class CallbackType, class Ret, class... Args>
+auto make_inject(const char* module,
+                 const char* function,
+                 Ret(WINAPI* ptr_to_original_fun)(Args...),
+                 CallbackType new_function) {
+  std::function<Ret(Args...)> function_wrapper = [=](Args... args) {
+    return new_function(args...);
+  };
+  return make_inject<Unique>(module, function, ptr_to_original_fun,
+                             function_wrapper);
+}
+
+template <class Ret, class... Args>
+auto injection_type_helper(Ret(WINAPI*)(Args...)) {
+  return ScopedInjector<Ret, Args...>::Pointer(nullptr);
+}
+
+#define injection_stringize_helper(s) #s
+#define injection_stringize(s) injection_stringize_helper(s)
+
+#define injection_ptr_type(win_api_function) \
+  decltype(injection_type_helper(win_api_function))
+
+#define inject(win_api_function, new_function) \
+  inject_in_module(nullptr, win_api_function, new_function)
+
+#define inject_in_module(module_name, win_api_function, new_function) \
+  [](auto module_name_var, auto&& new_function_var) {                 \
+    struct Unique {};                                                 \
+    return make_inject<Unique>(module_name_var,                       \
+                               injection_stringize(win_api_function), \
+                               win_api_function, new_function_var);   \
+  }(module_name, new_function);
+
+template <class ClassObj, class ClassWithMemeber, class Rest, class... Args>
+auto make_injection_callback(ClassObj& object,
+                             Rest (ClassWithMemeber::*member)(Args...)) {
+  ClassObj* object_ptr = &object;
+  return [=](Args... args) { return (object_ptr->*member)(args...); };
 }
