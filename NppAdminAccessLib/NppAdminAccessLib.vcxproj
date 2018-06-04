@@ -43,7 +43,7 @@
     <ProjectGuid>{2394591E-0D3A-4444-8E04-4BFBD689C6A1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>NppAdminAccessLib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
