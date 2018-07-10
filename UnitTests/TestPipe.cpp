@@ -4,7 +4,7 @@
 #include <codecvt>
 #include <thread>
 
-#include "Pipe.h"
+#include "Pipe.hpp"
 
 namespace {
 std::vector<char> string_as_vector(const std::string& str) {

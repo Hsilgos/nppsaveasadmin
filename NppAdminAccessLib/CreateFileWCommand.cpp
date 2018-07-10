@@ -1,6 +1,11 @@
-#include "ICommand.h"
+#include "ICommand.hpp"
+#include "IWinApiFunctions.hpp"
 
 class CreateFileWCommand : public ICommand {
+ public:
+  using ICommand::ICommand;
+
+ private:
   bool execute(const std::vector<char>& data,
                std::vector<char>& ret_data) override {
     const CreateFileDataW* tofs =
@@ -14,10 +19,10 @@ class CreateFileWCommand : public ICommand {
     security_attributes.nLength = sizeof(security_attributes);
     security_attributes.bInheritHandle = TRUE;
 
-    const HANDLE handle =
-        CreateFileW(tofs->filename, tofs->desired_access, tofs->share_mode,
-                    &security_attributes, tofs->creation_disposition,
-                    tofs->flags_and_attributes, 0);
+    const HANDLE handle = m_winapi.create_file_w(
+        tofs->filename, tofs->desired_access, tofs->share_mode,
+        &security_attributes, tofs->creation_disposition,
+        tofs->flags_and_attributes, 0);
 
     result->success = (handle != INVALID_HANDLE_VALUE);
     result->last_error = GetLastError();
@@ -29,7 +34,7 @@ class CreateFileWCommand : public ICommand {
   }
 };
 
-ICommand& get_create_filew_command() {
-  static CreateFileWCommand command;
-  return command;
+std::unique_ptr<ICommand> make_create_filew_command(
+    IWinApiFunctions& original_functions) {
+  return std::make_unique<CreateFileWCommand>(original_functions);
 }

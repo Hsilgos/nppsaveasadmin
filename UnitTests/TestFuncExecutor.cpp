@@ -6,12 +6,12 @@
 #include <string>
 #include <thread>
 
-#include "CommandManager.h"
-#include "CommandProcessor.h"
-#include "Common.h"
-#include "ICommand.h"
-#include "Pipe.h"
-#include "plugin/FuncExecutor.h"
+#include "Common.hpp"
+#include "ExecutionThread.hpp"
+#include "ICommand.hpp"
+#include "IWinApiFunctions.hpp"
+#include "MockWinApiFunctions.hpp"
+#include "TestUtilities.hpp"
 
 namespace {
 const char* PipeName = "test_pipe";
@@ -19,53 +19,22 @@ const char* TestFileNameA1 = "test_file2.txt";
 const wchar_t* TestFileNameW1 = L"test_file2.txt";
 const std::string TestBuffer = "test_text";
 
+using ::testing::_;
 using ::testing::Return;
 using ::testing::SetArgReferee;
-using ::testing::_;
 
 class MockCommand : public ICommand {
  public:
+  using ICommand::ICommand;
   MOCK_METHOD2(execute, bool(const std::vector<char>&, std::vector<char>&));
 };
 
 struct FuncExecutorFixture : public ::testing::Test {
-  std::unique_ptr<Pipe> pipe_sender = Pipe::create_unique();
-  std::unique_ptr<Pipe> pipe_receiver = Pipe::create_unique();
-  std::thread execution_thread;
-  int execution_result = 0;
-  CommandManager command_manager;
+  const FileAutoremover file_auto_remove = FileAutoremover(TestFileNameA1);
+  DefaultWinApiFunctions default_winapi_functions;
 
-  FuncExecutorFixture() {
-    std::remove(TestFileNameA1);
-    execution_thread = std::thread([this]() {
-      execution_result = process_commands(
-          command_manager, pipe_sender->get_name(), pipe_receiver->get_name());
-    });
-    pipe_sender->wait();
-    pipe_receiver->wait();
-    SetLastError(ERROR_SUCCESS);
-  }
-  ~FuncExecutorFixture() {
-    stop_execution_thread(true);
-    std::remove(TestFileNameA1);
-  }
-  void stop_execution_thread(bool call_execute_exit) {
-    if (execution_thread.joinable()) {
-      auto future =
-          std::async(std::launch::async, &std::thread::join, &execution_thread);
-      if (call_execute_exit)
-        execute_exit(*pipe_sender);
-      EXPECT_NE(future.wait_for(std::chrono::seconds(5)),
-                std::future_status::timeout);
-      if (execution_thread.joinable()) {
-        std::terminate();
-      }
-    }
-  }
-  int wait_execution_thread() {
-    stop_execution_thread(false);
-    return execution_result;
-  }
+  ExecutionThread execution_thread;
+
   void check_file_exists() { check_file_content(TestBuffer); }
 
   void check_file_content(const std::string& expected_file_content) {
@@ -84,29 +53,31 @@ struct FuncExecutorFixture : public ::testing::Test {
 };
 
 TEST_F(FuncExecutorFixture, ExecuteExit) {
-  ASSERT_EQ(0, execution_result);
-  ASSERT_TRUE(execution_thread.joinable());
-  stop_execution_thread(true);
-  ASSERT_FALSE(execution_thread.joinable());
-  EXPECT_EQ(NoError, execution_result);
+  ASSERT_EQ(0, execution_thread.execution_result);
+  ASSERT_TRUE(execution_thread.thread.joinable());
+  execution_thread.stop(true);
+  ASSERT_FALSE(execution_thread.thread.joinable());
+  EXPECT_EQ(NoError, execution_thread.execution_result);
 }
 
 struct WriteFileFixture : public FuncExecutorFixture {
   HANDLE file_handle = INVALID_HANDLE_VALUE;
   WriteFileFixture() {
-    register_default_commands(command_manager);
-    file_handle = execute_create_file_w(*pipe_sender, *pipe_receiver,
-                                        TestFileNameW1, GENERIC_WRITE, 0,
-                                        CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+    register_default_commands(execution_thread.command_manager,
+                              default_winapi_functions);
+    file_handle = execute_create_file_w(
+        *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+        TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
     EXPECT_EQ(ERROR_SUCCESS, GetLastError());
     EXPECT_NE(INVALID_HANDLE_VALUE, file_handle);
   }
 
   void close_file() {
     if (INVALID_HANDLE_VALUE != file_handle) {
-      EXPECT_TRUE(
-          execute_close_handle(*pipe_sender, *pipe_receiver, file_handle));
-      EXPECT_EQ(NoError, execution_result);
+      EXPECT_TRUE(execute_close_handle(*execution_thread.pipe_sender,
+                                       *execution_thread.pipe_receiver,
+                                       file_handle));
+      EXPECT_EQ(NoError, execution_thread.execution_result);
       file_handle = INVALID_HANDLE_VALUE;
     }
   }
@@ -117,9 +88,9 @@ struct WriteFileFixture : public FuncExecutorFixture {
 struct CorruptedDataFixture : public FuncExecutorFixture {
   HANDLE file_handle = INVALID_HANDLE_VALUE;
   void open_file() {
-    file_handle = execute_create_file_w(*pipe_sender, *pipe_receiver,
-                                        TestFileNameW1, GENERIC_WRITE, 0,
-                                        CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+    file_handle = execute_create_file_w(
+        *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+        TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
     EXPECT_EQ(ERROR_SUCCESS, GetLastError());
     EXPECT_NE(INVALID_HANDLE_VALUE, file_handle);
   }
@@ -129,19 +100,25 @@ struct CorruptedDataFixture : public FuncExecutorFixture {
       file_handle = INVALID_HANDLE_VALUE;
     }
   }
-  CorruptedDataFixture() { register_default_commands(command_manager); }
+  CorruptedDataFixture() {
+    register_default_commands(execution_thread.command_manager,
+                              default_winapi_functions);
+  }
   ~CorruptedDataFixture() { close_file(); }
 
   std::vector<char> incorrect_return_data;
-  MockCommand incorrect_return_data_mock_command;
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> incorrect_return_data_mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
   template <class ResultType>
   void prepare_test_incorrect_return_data_size(int resize_diff, Commands cmd) {
     prepareVectorToStoreData<ResultType>(incorrect_return_data);
     const int new_size =
         static_cast<int>(incorrect_return_data.size()) + resize_diff;
     incorrect_return_data.resize(new_size);
-    command_manager.register_command(cmd, &incorrect_return_data_mock_command);
-    EXPECT_CALL(incorrect_return_data_mock_command, execute(_, _))
+    execution_thread.command_manager.register_command(
+        cmd, incorrect_return_data_mock_command);
+    EXPECT_CALL(*incorrect_return_data_mock_command, execute(_, _))
         .WillRepeatedly(
             DoAll(SetArgReferee<1>(incorrect_return_data), Return(true)));
   }
@@ -162,11 +139,13 @@ TEST_P(WriteFileParametrizedTest, CreateWriteCloseFileAndGetType) {
   });
   DWORD number_of_bytes_written = 0;
   EXPECT_TRUE(execute_write_file(
-      *pipe_sender, *pipe_receiver, file_handle, buffer_to_write.c_str(),
-      buffer_to_write.size(), &number_of_bytes_written));
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      file_handle, buffer_to_write.c_str(), buffer_to_write.size(),
+      &number_of_bytes_written));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
-  EXPECT_EQ(FILE_TYPE_DISK,
-            execute_get_file_type(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_EQ(FILE_TYPE_DISK, execute_get_file_type(
+                                *execution_thread.pipe_sender,
+                                *execution_thread.pipe_receiver, file_handle));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
   EXPECT_EQ(buffer_to_write.size(), number_of_bytes_written);
   close_file();
@@ -184,11 +163,13 @@ INSTANTIATE_TEST_CASE_P(WriteFileTestSequence,
                                               1));
 
 TEST_F(WriteFileFixture, ValidData_NoPtrToWritten) {
-  EXPECT_TRUE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_TRUE(execute_write_file(*execution_thread.pipe_sender,
+                                 *execution_thread.pipe_receiver, file_handle,
                                  TestBuffer.c_str(), TestBuffer.size(), NULL));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
-  EXPECT_EQ(FILE_TYPE_DISK,
-            execute_get_file_type(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_EQ(FILE_TYPE_DISK, execute_get_file_type(
+                                *execution_thread.pipe_sender,
+                                *execution_thread.pipe_receiver, file_handle));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
   close_file();
   check_file_content(TestBuffer);
@@ -196,32 +177,34 @@ TEST_F(WriteFileFixture, ValidData_NoPtrToWritten) {
 
 TEST_F(WriteFileFixture, ZeroBufferLenth) {
   DWORD number_of_bytes_written = 0;
-  EXPECT_TRUE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
-                                 TestBuffer.c_str(), 0,
-                                 &number_of_bytes_written));
+  EXPECT_TRUE(execute_write_file(
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      file_handle, TestBuffer.c_str(), 0, &number_of_bytes_written));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
   EXPECT_EQ(0, number_of_bytes_written);
 }
 
 TEST_F(WriteFileFixture, ZeroBufferLenth_NoPtrToWritten) {
   SetLastError(ERROR_SUCCESS);
-  EXPECT_TRUE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_TRUE(execute_write_file(*execution_thread.pipe_sender,
+                                 *execution_thread.pipe_receiver, file_handle,
                                  TestBuffer.c_str(), 0, NULL));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
 }
 
 TEST_F(WriteFileFixture, NoBuffer) {
   DWORD number_of_bytes_written = 0;
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
-                                  NULL, TestBuffer.size(),
-                                  &number_of_bytes_written));
+  EXPECT_FALSE(execute_write_file(
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      file_handle, NULL, TestBuffer.size(), &number_of_bytes_written));
   EXPECT_EQ(ERROR_INVALID_USER_BUFFER, GetLastError());
   EXPECT_EQ(0, number_of_bytes_written);
   SetLastError(ERROR_SUCCESS);
 }
 
 TEST_F(WriteFileFixture, NoBuffer_NoPtrToWritten) {
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   NULL, TestBuffer.size(), NULL));
   EXPECT_EQ(ERROR_INVALID_USER_BUFFER, GetLastError());
   SetLastError(ERROR_SUCCESS);
@@ -229,78 +212,92 @@ TEST_F(WriteFileFixture, NoBuffer_NoPtrToWritten) {
 
 TEST_F(WriteFileFixture, NoBufferAndZeroBufferLenth) {
   DWORD number_of_bytes_written = 0;
-  EXPECT_TRUE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_TRUE(execute_write_file(*execution_thread.pipe_sender,
+                                 *execution_thread.pipe_receiver, file_handle,
                                  NULL, 0, &number_of_bytes_written));
   EXPECT_EQ(0, number_of_bytes_written);
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
 }
 
 TEST_F(WriteFileFixture, NoBufferAndZeroBufferLenth_NoPtrToWritten) {
-  EXPECT_TRUE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_TRUE(execute_write_file(*execution_thread.pipe_sender,
+                                 *execution_thread.pipe_receiver, file_handle,
                                  NULL, 0, NULL));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
 }
 
 TEST_F(FuncExecutorFixture, CreateFileLastErrorIsAccesDenied) {
-  MockCommand mock_command;
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
   std::vector<char> ret_data;
   CreateFileResult* create_file_result =
       prepareVectorToStoreData<CreateFileResult>(ret_data);
   create_file_result->handle = INVALID_HANDLE_VALUE;
   create_file_result->last_error = ERROR_ACCESS_DENIED;
-  command_manager.register_command(CreateFileWCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _))
+  execution_thread.command_manager.register_command(CreateFileWCmd,
+                                                    mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(ret_data), Return(true)));
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
   EXPECT_EQ(ERROR_ACCESS_DENIED, GetLastError());
 }
 
 TEST_F(FuncExecutorFixture, CreateFileCorruptedData) {
-  MockCommand mock_command;
-  command_manager.register_command(CreateFileWCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _)).WillOnce(Return(false));
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(CreateFileWCmd,
+                                                    mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _)).WillOnce(Return(false));
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
-  EXPECT_EQ(BadDataInBuffer, wait_execution_thread());
+  EXPECT_EQ(BadDataInBuffer, execution_thread.wait());
 }
 
 TEST_F(FuncExecutorFixture, CreateFileNoSuchCommandRegistered) {
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
-  EXPECT_EQ(UnknownCommand, wait_execution_thread());
+  EXPECT_EQ(UnknownCommand, execution_thread.wait());
 }
 
 TEST_F(FuncExecutorFixture, CreateFileEmptyData) {
-  MockCommand mock_command;
-  command_manager.register_command(CreateFileWCmd, &mock_command);
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(CreateFileWCmd,
+                                                    mock_command);
   std::vector<char> ret_data;
-  EXPECT_CALL(mock_command, execute(_, _))
+  EXPECT_CALL(*mock_command, execute(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(ret_data), Return(true)));
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
-  EXPECT_EQ(ReturnBufferHasNoData, wait_execution_thread());
+  EXPECT_EQ(ReturnBufferHasNoData, execution_thread.wait());
 }
 
 TEST_F(FuncExecutorFixture, CreateFileReturnedCorruptedDataLess) {
   std::vector<char> ret_data;
   prepareVectorToStoreData<CreateFileResult>(ret_data);
   ret_data.resize(ret_data.size() - 1);
-  MockCommand mock_command;
-  command_manager.register_command(CreateFileWCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _))
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(CreateFileWCmd,
+                                                    mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(ret_data), Return(true)));
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
 }
 
@@ -308,54 +305,66 @@ TEST_F(FuncExecutorFixture, CreateFileReturnedCorruptedDataMore) {
   std::vector<char> ret_data;
   prepareVectorToStoreData<CreateFileResult>(ret_data);
   ret_data.resize(ret_data.size() + 1);
-  MockCommand mock_command;
-  command_manager.register_command(CreateFileWCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _))
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(CreateFileWCmd,
+                                                    mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(ret_data), Return(true)));
   const HANDLE handle = execute_create_file_w(
-      *pipe_sender, *pipe_receiver, TestFileNameW1, GENERIC_WRITE, 0,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
+      *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
+      TestFileNameW1, GENERIC_WRITE, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL);
   EXPECT_EQ(INVALID_HANDLE_VALUE, handle);
 }
 
 TEST_F(CorruptedDataFixture, WriteFileCorruptedData) {
   open_file();
-  MockCommand mock_command;
-  command_manager.register_command(WriteFileCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _)).WillOnce(Return(false));
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(WriteFileCmd, mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _)).WillOnce(Return(false));
   DWORD number_of_bytes_written = 0;
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(),
                                   &number_of_bytes_written));
-  EXPECT_EQ(BadDataInBuffer, wait_execution_thread());
+  EXPECT_EQ(BadDataInBuffer, execution_thread.wait());
 }
 
 TEST_F(CorruptedDataFixture, WriteFileCorruptedData_NoPtrToWritten) {
   open_file();
-  MockCommand mock_command;
-  command_manager.register_command(WriteFileCmd, &mock_command);
-  EXPECT_CALL(mock_command, execute(_, _)).WillOnce(Return(false));
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  MockWinApiFunctions mock_winapi;
+  std::shared_ptr<MockCommand> mock_command =
+      std::make_shared<MockCommand>(mock_winapi);
+  execution_thread.command_manager.register_command(WriteFileCmd, mock_command);
+  EXPECT_CALL(*mock_command, execute(_, _)).WillOnce(Return(false));
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(), NULL));
-  EXPECT_EQ(BadDataInBuffer, wait_execution_thread());
+  EXPECT_EQ(BadDataInBuffer, execution_thread.wait());
 }
 
 TEST_F(CorruptedDataFixture, WriteFileNoSuchCommandRegistered) {
   open_file();
-  command_manager.erase_command(WriteFileCmd);
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  execution_thread.command_manager.erase_command(WriteFileCmd);
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(), NULL));
-  EXPECT_EQ(UnknownCommand, wait_execution_thread());
+  EXPECT_EQ(UnknownCommand, execution_thread.wait());
 }
 
 TEST_F(CorruptedDataFixture, WriteFileReturnedCorruptedDataLess) {
   open_file();
   prepare_test_incorrect_return_data_size<WriteFileResult>(-1, WriteFileCmd);
   DWORD number_of_bytes_written = 0;
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(),
                                   &number_of_bytes_written));
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(), NULL));
 }
 
@@ -363,10 +372,12 @@ TEST_F(CorruptedDataFixture, WriteFileReturnedCorruptedDataMore) {
   open_file();
   prepare_test_incorrect_return_data_size<WriteFileResult>(1, WriteFileCmd);
   DWORD number_of_bytes_written = 0;
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(),
                                   &number_of_bytes_written));
-  EXPECT_FALSE(execute_write_file(*pipe_sender, *pipe_receiver, file_handle,
+  EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
+                                  *execution_thread.pipe_receiver, file_handle,
                                   TestBuffer.c_str(), TestBuffer.size(), NULL));
 }
 
@@ -374,27 +385,33 @@ TEST_F(CorruptedDataFixture, CloseHandleReturnedCorruptedDataLess) {
   open_file();
   prepare_test_incorrect_return_data_size<CloseHandleResult>(-1,
                                                              CloseHandleCmd);
-  EXPECT_FALSE(execute_close_handle(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_FALSE(execute_close_handle(*execution_thread.pipe_sender,
+                                    *execution_thread.pipe_receiver,
+                                    file_handle));
 }
 
 TEST_F(CorruptedDataFixture, CloseHandleReturnedCorruptedDataMore) {
   open_file();
   prepare_test_incorrect_return_data_size<CloseHandleResult>(1, CloseHandleCmd);
-  EXPECT_FALSE(execute_close_handle(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_FALSE(execute_close_handle(*execution_thread.pipe_sender,
+                                    *execution_thread.pipe_receiver,
+                                    file_handle));
 }
 
 TEST_F(CorruptedDataFixture, GetFileTypeReturnedCorruptedDataLess) {
   open_file();
   prepare_test_incorrect_return_data_size<GetFileTypeResult>(-1,
                                                              GetFileTypeCmd);
-  EXPECT_FALSE(
-      execute_get_file_type(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_FALSE(execute_get_file_type(*execution_thread.pipe_sender,
+                                     *execution_thread.pipe_receiver,
+                                     file_handle));
 }
 
 TEST_F(CorruptedDataFixture, GetFileTypeReturnedCorruptedDataMore) {
   open_file();
   prepare_test_incorrect_return_data_size<GetFileTypeResult>(1, GetFileTypeCmd);
-  EXPECT_FALSE(
-      execute_get_file_type(*pipe_sender, *pipe_receiver, file_handle));
+  EXPECT_FALSE(execute_get_file_type(*execution_thread.pipe_sender,
+                                     *execution_thread.pipe_receiver,
+                                     file_handle));
 }
 }  // namespace

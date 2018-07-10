@@ -19,8 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Pipe.h" />
+    <ClInclude Include="Common.hpp" />
+    <ClInclude Include="IWinApiFunctions.hpp" />
+    <ClInclude Include="Pipe.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Pipe.cpp" />

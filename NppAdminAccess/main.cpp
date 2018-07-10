@@ -1,8 +1,9 @@
 #include <Windows.h>
 
-#include "commandManager.h"
-#include "commandProcessor.h"
-#include "common.h"
+#include "CommandManager.hpp"
+#include "CommandProcessor.hpp"
+#include "Common.hpp"
+#include "IWinApiFunctions.hpp"
 
 int WINAPI CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
   int arg_count = 0;
@@ -13,7 +14,8 @@ int WINAPI CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
                MB_OK);
     return WrongExecute;
   }
+  DefaultWinApiFunctions winapi;
   CommandManager command_manager;
-  register_default_commands(command_manager);
+  register_default_commands(command_manager, winapi);
   return process_commands(command_manager, args[1], args[2]);
 }

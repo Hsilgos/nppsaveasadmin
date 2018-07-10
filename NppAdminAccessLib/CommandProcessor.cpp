@@ -1,9 +1,9 @@
-#include "CommandProcessor.h"
+#include "CommandProcessor.hpp"
 
-#include "CommandManager.h"
-#include "Common.h"
-#include "ICommand.h"
-#include "Pipe.h"
+#include "CommandManager.hpp"
+#include "Common.hpp"
+#include "ICommand.hpp"
+#include "Pipe.hpp"
 
 #include <string>
 #include <vector>

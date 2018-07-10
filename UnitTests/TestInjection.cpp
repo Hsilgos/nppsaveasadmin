@@ -1,14 +1,16 @@
 #include <gmock/gmock.h>
 
-#include "plugin/AdminAccess.h"
-#include "plugin/FileOperations.h"
-#include "plugin/Injection.h"
-#include "plugin/NppSaveAsAdminImpl.h"
+#include "plugin/AdminAccess.hpp"
+#include "plugin/Injection.hpp"
+#include "plugin/SaveAsAdminImpl.hpp"
 
-#include "CommandManager.h"
-#include "CommandProcessor.h"
+#include "CommandManager.hpp"
+#include "CommandProcessor.hpp"
+#include "TestUtilities.hpp"
 
-#include "Pipe.h"
+#include "IWinApiFunctions.hpp"
+#include "MockWinApiFunctions.hpp"
+#include "Pipe.hpp"
 
 #include <thread>
 
@@ -25,39 +27,25 @@ const HANDLE ValidHandle2 = reinterpret_cast<HANDLE>(2);
 
 using ::testing::_;
 using ::testing::Return;
-class MockFileOperations {
- public:
-  MOCK_METHOD7(TestCreateFileA,
-               HANDLE(LPCSTR,
-                      DWORD,
-                      DWORD,
-                      LPSECURITY_ATTRIBUTES,
-                      DWORD,
-                      DWORD,
-                      HANDLE));
-  MOCK_METHOD5(TestWriteFile,
-               BOOL(HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED));
-  MOCK_METHOD1(TestCloseHandle, BOOL(HANDLE));
-};
 
 class InjectionFixture : public ::testing::Test {
  public:
-  InjectionFixture() { std::remove(TestFileName1); }
-  ~InjectionFixture() { std::remove(TestFileName1); }
+  FileAutoremover file_auto_remove = FileAutoremover(TestFileName1);
+  ::testing::StrictMock<MockWinApiFunctions> mock_winapi;
+
   void configure_mock_default() {
-    ON_CALL(file_operations, TestCreateFileA(_, _, _, _, _, _, _))
+    ON_CALL(mock_winapi, create_file_a(_, _, _, _, _, _, _))
         .WillByDefault(Return(ValidHandle));
-    ON_CALL(file_operations, TestWriteFile(_, _, _, _, _))
+    ON_CALL(mock_winapi, write_file(_, _, _, _, _))
         .WillByDefault(Return(TRUE));
-    ON_CALL(file_operations, TestCloseHandle(_)).WillByDefault(Return(TRUE));
+    ON_CALL(mock_winapi, close_handle(_))
+        .WillByDefault(Return(TRUE));
   }
 
   template <class Rest, class... Args>
-  auto test_callback(Rest (MockFileOperations::*member)(Args...)) {
-    return make_injection_callback(file_operations, member);
+  auto test_callback(Rest (MockWinApiFunctions::*member)(Args...)) {
+    return make_injection_callback(mock_winapi, member);
   }
-
-  ::testing::StrictMock<MockFileOperations> file_operations;
 
   HANDLE create_file_default() {
     return CreateFileA(TestFileName1, GENERIC_WRITE, 0, NULL, CREATE_NEW,
@@ -91,11 +79,11 @@ TEST_F(InjectionFixture, WriteFileWithoutInjection) {
 }
 
 TEST_F(InjectionFixture, CreateFileIsHookedAndReleased) {
-  EXPECT_CALL(file_operations, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(mock_winapi, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle));
   auto create_file =
       inject_in_module("Kernel32.dll", CreateFileA,
-                       test_callback(&MockFileOperations::TestCreateFileA));
+                       test_callback(&MockWinApiFunctions::create_file_a));
   HANDLE file_handle = create_file_default();
   ASSERT_EQ(ValidHandle, file_handle);
 
@@ -110,10 +98,10 @@ TEST_F(InjectionFixture, CreateFileIsHookedAndReleased) {
 }
 
 TEST_F(InjectionFixture, CreateFileIsHookedAndReleased_NoModule) {
-  EXPECT_CALL(file_operations, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(mock_winapi, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle));
-  auto create_file =
-      inject(CreateFileA, test_callback(&MockFileOperations::TestCreateFileA));
+  auto create_file = inject(
+      CreateFileA, test_callback(&MockWinApiFunctions::create_file_a));
   HANDLE file_handle = create_file_default();
   ASSERT_EQ(ValidHandle, file_handle);
 
@@ -130,34 +118,36 @@ TEST_F(InjectionFixture, CreateFileIsHookedAndReleased_NoModule) {
 TEST_F(InjectionFixture, TryToInjectInWrongModule) {
   EXPECT_THROW(
       inject_in_module("WrongModule.dll", CreateFileA,
-                       test_callback(&MockFileOperations::TestCreateFileA)),
+                       test_callback(&MockWinApiFunctions::create_file_a)),
       std::logic_error);
 }
 
 TEST_F(InjectionFixture, TryToInjectTwice_WithSameMacro) {
   auto inject_same_function = [this]() {
     return inject(CreateFileA,
-                  test_callback(&MockFileOperations::TestCreateFileA));
+                  test_callback(&MockWinApiFunctions::create_file_a));
   };
   auto injection = inject_same_function();
   EXPECT_THROW(inject_same_function(), std::logic_error);
 }
 
 TEST_F(InjectionFixture, InjectTwice_LastAliveReceivesOperations) {
-  ::testing::StrictMock<MockFileOperations> file_operations1;
-  ::testing::StrictMock<MockFileOperations> file_operations2;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations1;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations2;
 
-  EXPECT_CALL(file_operations1, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(file_operations1, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle1));
-  EXPECT_CALL(file_operations2, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(file_operations2, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle2));
 
-  auto create_file1 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations1, &MockFileOperations::TestCreateFileA));
-  auto create_file2 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations2, &MockFileOperations::TestCreateFileA));
+  auto create_file1 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations1,
+                                     &MockWinApiFunctions::create_file_a));
+  auto create_file2 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations2,
+                                     &MockWinApiFunctions::create_file_a));
 
   ASSERT_EQ(ValidHandle2, create_file_default());
 
@@ -172,18 +162,20 @@ TEST_F(InjectionFixture, InjectTwice_LastAliveReceivesOperations) {
 }
 
 TEST_F(InjectionFixture, InjectTwice_CallOriginalCallsPrevious) {
-  ::testing::StrictMock<MockFileOperations> file_operations1;
-  ::testing::StrictMock<MockFileOperations> file_operations2;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations1;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations2;
 
-  EXPECT_CALL(file_operations1, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(file_operations1, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle1));
 
-  auto create_file1 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations1, &MockFileOperations::TestCreateFileA));
-  auto create_file2 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations2, &MockFileOperations::TestCreateFileA));
+  auto create_file1 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations1,
+                                     &MockWinApiFunctions::create_file_a));
+  auto create_file2 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations2,
+                                     &MockWinApiFunctions::create_file_a));
 
   ASSERT_EQ(ValidHandle1, create_file2->call_original(
                               TestFileName1, GENERIC_WRITE, 0, NULL, CREATE_NEW,
@@ -191,22 +183,25 @@ TEST_F(InjectionFixture, InjectTwice_CallOriginalCallsPrevious) {
 }
 
 TEST_F(InjectionFixture, InjectThreeTimes_ResetMiddle) {
-  ::testing::StrictMock<MockFileOperations> file_operations1;
-  ::testing::StrictMock<MockFileOperations> file_operations2;
-  ::testing::StrictMock<MockFileOperations> file_operations3;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations1;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations2;
+  ::testing::StrictMock<MockWinApiFunctions> file_operations3;
 
-  EXPECT_CALL(file_operations1, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(file_operations1, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle1));
 
-  auto create_file1 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations1, &MockFileOperations::TestCreateFileA));
-  auto create_file2 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations2, &MockFileOperations::TestCreateFileA));
-  auto create_file3 = inject(
-      CreateFileA, make_injection_callback(
-                       file_operations3, &MockFileOperations::TestCreateFileA));
+  auto create_file1 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations1,
+                                     &MockWinApiFunctions::create_file_a));
+  auto create_file2 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations2,
+                                     &MockWinApiFunctions::create_file_a));
+  auto create_file3 =
+      inject(CreateFileA,
+             make_injection_callback(file_operations3,
+                                     &MockWinApiFunctions::create_file_a));
 
   create_file2.reset();
 
@@ -218,7 +213,7 @@ TEST_F(InjectionFixture, InjectThreeTimes_ResetMiddle) {
 TEST_F(InjectionFixture, CallOriginalFunctionAfterHook) {
   auto create_file =
       inject_in_module("Kernel32.dll", CreateFileA,
-                       test_callback(&MockFileOperations::TestCreateFileA));
+                       test_callback(&MockWinApiFunctions::create_file_a));
   HANDLE file_handle =
       create_file->call_original(TestFileName1, GENERIC_WRITE, 0, NULL,
                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -231,21 +226,21 @@ TEST_F(InjectionFixture, CallOriginalFunctionAfterHook) {
 }
 
 TEST_F(InjectionFixture, WriteFileWithInjection) {
-  EXPECT_CALL(file_operations, TestCreateFileA(_, _, _, _, _, _, _))
+  EXPECT_CALL(mock_winapi, create_file_a(_, _, _, _, _, _, _))
       .WillOnce(Return(ValidHandle));
-  EXPECT_CALL(file_operations, TestWriteFile(_, _, _, _, _))
+  EXPECT_CALL(mock_winapi, write_file(_, _, _, _, _))
       .WillOnce(Return(TRUE));
-  EXPECT_CALL(file_operations, TestCloseHandle(_)).WillOnce(Return(TRUE));
+  EXPECT_CALL(mock_winapi, close_handle(_)).WillOnce(Return(TRUE));
 
   auto create_file =
       inject_in_module("Kernel32.dll", CreateFileA,
-                       test_callback(&MockFileOperations::TestCreateFileA));
+                       test_callback(&MockWinApiFunctions::create_file_a));
   auto write_file =
       inject_in_module("Kernel32.dll", WriteFile,
-                       test_callback(&MockFileOperations::TestWriteFile));
+                       test_callback(&MockWinApiFunctions::write_file));
   auto close_handle =
       inject_in_module("Kernel32.dll", CloseHandle,
-                       test_callback(&MockFileOperations::TestCloseHandle));
+                       test_callback(&MockWinApiFunctions::close_handle));
 
   write_file_with_win_api();
   check_file_not_exists();

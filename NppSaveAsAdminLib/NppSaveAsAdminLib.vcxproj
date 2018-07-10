@@ -20,18 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plugin\AdminAccess.cpp" />
-    <ClCompile Include="plugin\FileOperations.cpp" />
     <ClCompile Include="plugin\FuncExecutor.cpp" />
     <ClCompile Include="plugin\generated\NppAdminAccess.cpp" />
-    <ClCompile Include="plugin\NppSaveAsAdminImpl.cpp" />
+    <ClCompile Include="plugin\SaveAsAdminImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin\AdminAccess.h" />
-    <ClInclude Include="plugin\FileOperations.h" />
-    <ClInclude Include="plugin\FuncExecutor.h" />
+    <ClInclude Include="plugin\AdminAccess.hpp" />
+    <ClInclude Include="plugin\FuncExecutor.hpp" />
     <ClInclude Include="plugin\generated\NppAdminAccess.h" />
-    <ClInclude Include="plugin\Injection.h" />
-    <ClInclude Include="plugin\NppSaveAsAdminImpl.h" />
+    <ClInclude Include="plugin\Injection.hpp" />
+    <ClInclude Include="plugin\SaveAsAdminImpl.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
