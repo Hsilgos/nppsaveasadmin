@@ -6,6 +6,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <sstream>
 
 const std::uint32_t MaxModuleNameLen = 128;
 const std::uint32_t MaxFunctionNameLen = 64;
@@ -166,6 +167,7 @@ auto make_inject(const char* module,
                  Ret(WINAPI* ptr_to_original_fun)(Args...),
                  std::function<Ret(Args...)> new_function) {
   Unique unique;
+  (void)ptr_to_original_fun;
   return std::make_unique<ScopedInjector<Ret, Args...>>(unique, module,
                                                         function, new_function);
 }

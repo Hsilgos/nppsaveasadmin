@@ -47,28 +47,28 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CloseHandleCommand.h">
+    <ClInclude Include="CloseHandleCommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="CreateFileACommand.h">
+    <ClInclude Include="CreateFileACommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="CreateFileWCommand.h">
+    <ClInclude Include="CreateFileWCommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="GetFileTypeCommand.h">
+    <ClInclude Include="GetFileTypeCommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="ICommand.h">
+    <ClInclude Include="ICommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="WriteFileCommand.h">
+    <ClInclude Include="WriteFileCommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
-    <ClInclude Include="CommandManager.h">
+    <ClInclude Include="CommandManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CommandProcessor.h">
+    <ClInclude Include="CommandProcessor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

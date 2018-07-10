@@ -29,14 +29,14 @@
     <ClCompile Include="WriteFileCommand.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CloseHandleCommand.h" />
-    <ClInclude Include="CommandManager.h" />
-    <ClInclude Include="CommandProcessor.h" />
-    <ClInclude Include="CreateFileACommand.h" />
-    <ClInclude Include="CreateFileWCommand.h" />
-    <ClInclude Include="GetFileTypeCommand.h" />
-    <ClInclude Include="ICommand.h" />
-    <ClInclude Include="WriteFileCommand.h" />
+    <ClInclude Include="CloseHandleCommand.hpp" />
+    <ClInclude Include="CommandManager.hpp" />
+    <ClInclude Include="CommandProcessor.hpp" />
+    <ClInclude Include="CreateFileACommand.hpp" />
+    <ClInclude Include="CreateFileWCommand.hpp" />
+    <ClInclude Include="GetFileTypeCommand.hpp" />
+    <ClInclude Include="ICommand.hpp" />
+    <ClInclude Include="WriteFileCommand.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

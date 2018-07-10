@@ -1,7 +1,8 @@
-#include "ICommand.h"
+#include "ICommand.hpp"
 
-#include "CommandManager.h"
+#include "CommandManager.hpp"
 
-ICommand::ICommand() = default;
+ICommand::ICommand(IWinApiFunctions& original_functions)
+    : m_winapi(original_functions) {}
 
 ICommand::~ICommand() = default;

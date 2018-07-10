@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -166,6 +166,7 @@
     <ClCompile Include="TestFuncExecutor.cpp" />
     <ClCompile Include="TestInjection.cpp" />
     <ClCompile Include="TestPipe.cpp" />
+    <ClCompile Include="TestSaveAsAdminImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NppAdminAccessLib\NppAdminAccessLib.vcxproj">
@@ -177,6 +178,11 @@
     <ProjectReference Include="..\NppSaveAsAdminLib\NppSaveAsAdminLib.vcxproj">
       <Project>{f10e6e67-956f-4847-9110-8b4eb56a2857}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ExecutionThread.hpp" />
+    <ClInclude Include="MockWinApiFunctions.hpp" />
+    <ClInclude Include="TestUtilities.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

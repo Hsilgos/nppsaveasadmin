@@ -1,6 +1,11 @@
-#include "ICommand.h"
+#include "ICommand.hpp"
+#include "IWinApiFunctions.hpp"
 
 class GetFileTypeCommand : public ICommand {
+ public:
+  using ICommand::ICommand;
+
+ private:
   bool execute(const std::vector<char>& data,
                std::vector<char>& ret_data) override {
     const GetFileTypeData* tgft =
@@ -10,14 +15,14 @@ class GetFileTypeCommand : public ICommand {
     GetFileTypeResult* result =
         prepareVectorToStoreData<GetFileTypeResult>(ret_data);
 
-    result->type = GetFileType(tgft->handle);
+    result->type = m_winapi.get_file_type(tgft->handle);
     result->last_error = GetLastError();
 
     return true;
   }
 };
 
-ICommand& get_file_type_command() {
-  static GetFileTypeCommand command;
-  return command;
+std::unique_ptr<ICommand> make_file_type_command(
+    IWinApiFunctions& original_functions) {
+  return std::make_unique<GetFileTypeCommand>(original_functions);
 }

@@ -4,12 +4,17 @@
 #include <string>
 #include <vector>
 
-#include "plugin/AdminAccess.h"
-#include "plugin/FileOperations.h"
-#include "plugin/NppSaveAsAdminImpl.h"
+#include "plugin/AdminAccess.hpp"
+#include "plugin/SaveAsAdminImpl.hpp"
+
+#include "IWinApiFunctions.hpp"
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
+
+namespace {
+std::unique_ptr<SaveAsAdminImpl> m_save_as_admin_impl;
+}
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +57,7 @@ extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF) {
   return funcItem;
 }
 
-std::wstring currentFilePath(SCNotification* notifyCode) {
+std::wstring current_file_path(SCNotification* notifyCode) {
   int avar = SendMessage(nppData._nppHandle, NPPM_GETFULLPATHFROMBUFFERID,
                          (WPARAM)notifyCode->nmhdr.idFrom, (LPARAM)NULL);
 
@@ -73,12 +78,14 @@ std::wstring currentFilePath(SCNotification* notifyCode) {
 extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode) {
   switch (notifyCode->nmhdr.code) {
     case NPPN_FILEBEFORESAVE:
-      DefaultNppSaveAsAdminBehaviour::instance().allow_process_file(
-          currentFilePath(notifyCode));
+		if (m_save_as_admin_impl) {
+			m_save_as_admin_impl->allow_process_file(current_file_path(notifyCode));
+		}
       break;
     case NPPN_FILESAVED:
-      DefaultNppSaveAsAdminBehaviour::instance().cancel_process_file(
-          currentFilePath(notifyCode));
+		if (m_save_as_admin_impl) {
+			m_save_as_admin_impl->cancel_process_file(current_file_path(notifyCode));
+		}
       break;
     default:
       break;

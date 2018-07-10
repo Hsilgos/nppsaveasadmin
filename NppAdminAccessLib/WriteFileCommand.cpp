@@ -1,6 +1,11 @@
-#include "ICommand.h"
+#include "ICommand.hpp"
+#include "IWinApiFunctions.hpp"
 
 class WriteFileCommand : public ICommand {
+ public:
+  using ICommand::ICommand;
+
+ private:
   bool execute(const std::vector<char>& data,
                std::vector<char>& ret_data) override {
     const WriteFileData* twfd =
@@ -12,9 +17,9 @@ class WriteFileCommand : public ICommand {
 
     DWORD written = 0;
 
-    const BOOL write_result =
-        WriteFile(twfd->handle, twfd->buffer_is_null ? nullptr : twfd->buffer,
-                  twfd->num_bytes_to_write, &written, NULL);
+    const BOOL write_result = m_winapi.write_file(
+        twfd->handle, twfd->buffer_is_null ? nullptr : twfd->buffer,
+        twfd->num_bytes_to_write, &written, NULL);
 
     result->success = (TRUE == write_result);
     result->last_error = GetLastError();
@@ -24,7 +29,7 @@ class WriteFileCommand : public ICommand {
   }
 };
 
-ICommand& get_write_file_command() {
-  static WriteFileCommand command;
-  return command;
+std::unique_ptr<ICommand> make_write_file_command(
+    IWinApiFunctions& original_functions) {
+  return std::make_unique<WriteFileCommand>(original_functions);
 }

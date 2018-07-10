@@ -18,8 +18,6 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 
-#include "plugin/FileOperations.h"
-
 #include <sstream>
 #include <vector>
 

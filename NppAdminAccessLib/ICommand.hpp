@@ -1,14 +1,20 @@
 #pragma once
 
+#include <memory>
 #include <vector>
-#include "Common.h"
+#include "Common.hpp"
+
+class IWinApiFunctions;
 
 class ICommand {
  public:
   virtual bool execute(const std::vector<char>& data,
                        std::vector<char>& ret_data) = 0;
-  ICommand();
+  ICommand(IWinApiFunctions& original_functions);
   virtual ~ICommand();
+
+ protected:
+  IWinApiFunctions& m_winapi;
 };
 
 template <class T>

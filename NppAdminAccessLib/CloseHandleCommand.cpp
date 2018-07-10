@@ -1,6 +1,11 @@
-#include "ICommand.h"
+#include "ICommand.hpp"
+#include "IWinApiFunctions.hpp"
 
 class CloseHandleCommand : public ICommand {
+ public:
+  using ICommand::ICommand;
+
+ private:
   bool execute(const std::vector<char>& data,
                std::vector<char>& ret_data) override {
     const CloseHandleData* tchd =
@@ -10,14 +15,15 @@ class CloseHandleCommand : public ICommand {
     CloseHandleResult* result =
         prepareVectorToStoreData<CloseHandleResult>(ret_data);
 
-    result->success = (TRUE == CloseHandle(tchd->handle));
+    result->success =
+        (TRUE == m_winapi.close_handle(tchd->handle));
     result->last_error = GetLastError();
 
     return true;
   }
 };
 
-ICommand& get_close_handle_command() {
-  static CloseHandleCommand command;
-  return command;
+std::unique_ptr<ICommand> make_close_handle_command(
+    IWinApiFunctions& winapi) {
+  return std::make_unique<CloseHandleCommand>(winapi);
 }

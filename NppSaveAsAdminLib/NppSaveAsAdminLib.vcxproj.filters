@@ -24,36 +24,30 @@
     <ClCompile Include="plugin\AdminAccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plugin\FileOperations.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="plugin\FuncExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="plugin\generated\NppAdminAccess.cpp">
       <Filter>Source Files\generated</Filter>
     </ClCompile>
-    <ClCompile Include="plugin\NppSaveAsAdminImpl.cpp">
+    <ClCompile Include="plugin\SaveAsAdminImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin\AdminAccess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="plugin\FileOperations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="plugin\FuncExecutor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plugin\generated\NppAdminAccess.h">
       <Filter>Header Files\generated</Filter>
     </ClInclude>
-    <ClInclude Include="plugin\NppSaveAsAdminImpl.h">
+    <ClInclude Include="plugin\AdminAccess.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin\Injection.h">
+    <ClInclude Include="plugin\FuncExecutor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin\Injection.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin\SaveAsAdminImpl.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
