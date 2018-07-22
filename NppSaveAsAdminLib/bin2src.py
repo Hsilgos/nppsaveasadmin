@@ -50,12 +50,14 @@ def bytes_from_file(filename, chunk_size = 1024 * 8):
 header=\
 """#pragma once
 
-const char* get_%s_buffer_ptr();
+#include <cstdint>
+
+const unsigned char* get_%s_buffer_ptr();
 std::uint64_t get_%s_buffer_length();
 """
 
 src_implementation="""
-const char* get_%s_buffer_ptr() {
+const unsigned char* get_%s_buffer_ptr() {
     return buffer_ptr;
 }
 std::uint64_t get_%s_buffer_length() {
@@ -69,8 +71,9 @@ def write_header(header_name, buffer_name):
 
 def write_src(src_name, buffer_name, binary_file):
   with open(src_name, 'w') as out_file:
+    out_file.write('#include <cstdint>\n')
     out_file.write('namespace {\n')
-    out_file.write('const char* const buffer_ptr = {')
+    out_file.write('const unsigned char buffer_ptr[] = {')
 
     byte_count = 0
     comma = ''

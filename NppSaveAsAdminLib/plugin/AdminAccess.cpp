@@ -25,18 +25,18 @@ void delete_admin_access() {
 bool dump_admin_access(IWinApiFunctions& winapi, std::wstring& path) {
   path = get_admin_access_path();
 
-  const HANDLE file = winapi.create_file_w(
-      path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL,
-      NULL);
+  const HANDLE file =
+      winapi.create_file_w(path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_NEW,
+                           FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (INVALID_HANDLE_VALUE == file)
     return ERROR_FILE_EXISTS == GetLastError();
 
   DWORD written = 0;
 
-  const BOOL write_result = winapi.write_file(
-      file, get_NppAdminAccess_buf(), get_NppAdminAccess_size(), &written,
-      NULL);
+  const BOOL write_result =
+      winapi.write_file(file, get_NppAdminAccess_buffer_ptr(),
+                        get_NppAdminAccess_buffer_length(), &written, NULL);
 
   winapi.close_handle(file);
 

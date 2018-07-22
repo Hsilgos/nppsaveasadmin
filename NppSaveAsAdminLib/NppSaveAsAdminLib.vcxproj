@@ -31,6 +31,11 @@
     <ClInclude Include="plugin\Injection.hpp" />
     <ClInclude Include="plugin\SaveAsAdminImpl.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NppAdminAccess\NppAdminAccess.vcxproj">
+      <Project>{caa47112-6d75-466c-ba89-f024b9ba3018}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{F10E6E67-956F-4847-9110-8B4EB56A2857}</ProjectGuid>
@@ -85,15 +90,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,6 +123,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)bin2src.py --buffer-name NppAdminAccess --input $(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe --out $(ProjectDir)\plugin\generated\NppAdminAccess</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Converting binary to source</Message>
+      <Outputs>$(ProjectDir)plugin\generated\NppAdminAccess.cpp;$(ProjectDir)plugin\generated\NppAdminAccess.h;%(Outputs)</Outputs>
+      <Inputs>$(ProjectDir)bin2src.py;$(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe;%(Inputs)</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -126,6 +147,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)bin2src.py --buffer-name NppAdminAccess --input $(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe --out $(ProjectDir)\plugin\generated\NppAdminAccess</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Converting binary to source</Message>
+      <Outputs>$(ProjectDir)plugin\generated\NppAdminAccess.cpp;$(ProjectDir)plugin\generated\NppAdminAccess.h;%(Outputs)</Outputs>
+      <Inputs>$(ProjectDir)bin2src.py;$(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe;%(Inputs)</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -146,6 +175,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)bin2src.py --buffer-name NppAdminAccess --input $(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe --out $(ProjectDir)\plugin\generated\NppAdminAccess</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Converting binary to source</Message>
+      <Outputs>$(ProjectDir)plugin\generated\NppAdminAccess.cpp;$(ProjectDir)plugin\generated\NppAdminAccess.h;%(Outputs)</Outputs>
+      <Inputs>$(ProjectDir)bin2src.py;$(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe;%(Inputs)</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -166,6 +203,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)bin2src.py --buffer-name NppAdminAccess --input $(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe --out $(ProjectDir)\plugin\generated\NppAdminAccess</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Converting binary to source</Message>
+      <Outputs>$(ProjectDir)plugin\generated\NppAdminAccess.cpp;$(ProjectDir)plugin\generated\NppAdminAccess.h;%(Outputs)</Outputs>
+      <Inputs>$(ProjectDir)bin2src.py;$(ProjectDir)..\NppSaveAsAdmin\bin\NppAdminAccess.exe;%(Inputs)</Inputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
