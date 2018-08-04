@@ -86,6 +86,9 @@ void pluginInit(HANDLE hModule) {
 //
 void pluginCleanUp() {}
 
+void do_injection();
+void un_do_injection();
+
 //
 // Initialization of your plugin commands
 // You should fill your plugins commands here
@@ -93,8 +96,8 @@ void commandMenuInit() {
   setCommand(0, TEXT("About"), about, NULL, false);
 
   if (is_debugging()) {
-    // setCommand(1, TEXT("Hook"), do_injection, NULL, false);
-    // setCommand(2, TEXT("Unhook"), un_do_injection, NULL, false);
+    setCommand(1, TEXT("Hook"), do_injection, NULL, false);
+    setCommand(2, TEXT("Unhook"), un_do_injection, NULL, false);
   }
 }
 

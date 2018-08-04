@@ -22,7 +22,6 @@
     <ClCompile Include="CloseHandleCommand.cpp" />
     <ClCompile Include="CommandManager.cpp" />
     <ClCompile Include="CommandProcessor.cpp" />
-    <ClCompile Include="CreateFileACommand.cpp" />
     <ClCompile Include="CreateFileWCommand.cpp" />
     <ClCompile Include="GetFileTypeCommand.cpp" />
     <ClCompile Include="ICommand.cpp" />
@@ -32,7 +31,6 @@
     <ClInclude Include="CloseHandleCommand.hpp" />
     <ClInclude Include="CommandManager.hpp" />
     <ClInclude Include="CommandProcessor.hpp" />
-    <ClInclude Include="CreateFileACommand.hpp" />
     <ClInclude Include="CreateFileWCommand.hpp" />
     <ClInclude Include="GetFileTypeCommand.hpp" />
     <ClInclude Include="ICommand.hpp" />

@@ -14,14 +14,6 @@ class IWinApiFunctions {
                                  LPDWORD number_of_bytes_written,
                                  LPOVERLAPPED overlapped) = 0;
 
-  virtual HANDLE create_file_a(LPCSTR file_name,
-                                     DWORD desired_access,
-                                     DWORD share_mode,
-                                     LPSECURITY_ATTRIBUTES security_attributes,
-                                     DWORD creation_disposition,
-                                     DWORD flags_and_attributes,
-                                     HANDLE template_file) = 0;
-
   virtual HANDLE create_file_w(LPCWSTR file_name,
                                      DWORD desired_access,
                                      DWORD share_mode,
@@ -44,18 +36,6 @@ class DefaultWinApiFunctions : public IWinApiFunctions {
                          LPOVERLAPPED overlapped) override {
     return WriteFile(file_handle, buffer, number_of_bytes_to_write,
                      number_of_bytes_written, overlapped);
-  }
-
-  HANDLE create_file_a(LPCSTR file_name,
-                             DWORD desired_access,
-                             DWORD share_mode,
-                             LPSECURITY_ATTRIBUTES security_attributes,
-                             DWORD creation_disposition,
-                             DWORD flags_and_attributes,
-                             HANDLE template_file) override {
-    return CreateFileA(file_name, desired_access, share_mode,
-                       security_attributes, creation_disposition,
-                       flags_and_attributes, template_file);
   }
 
   HANDLE create_file_w(LPCWSTR file_name,

@@ -16,6 +16,16 @@ namespace {
 std::unique_ptr<SaveAsAdminImpl> m_save_as_admin_impl;
 }
 
+void do_injection() {
+	if (!m_save_as_admin_impl) {
+		m_save_as_admin_impl = std::make_unique<SaveAsAdminImpl>();
+	}
+}
+
+void un_do_injection() {
+	m_save_as_admin_impl.reset();
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved) {
@@ -23,14 +33,14 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved) {
     case DLL_PROCESS_ATTACH:
       pluginInit(hModule);
       delete_admin_access();
-      // do_injection();
+      do_injection();
       break;
 
     case DLL_PROCESS_DETACH:
       commandMenuCleanUp();
       pluginCleanUp();
       delete_admin_access();
-      // un_do_injection();
+      un_do_injection();
       break;
 
     case DLL_THREAD_ATTACH:
