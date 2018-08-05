@@ -230,6 +230,7 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHooked) {
   save_as_admin_impl.cancel_process_file(TestFileNameW1);
 
   check_file_not_exists(TestFileNameW1);
+  original_functions.allow_create();
   check_file_exists(TestFileNameW1_Hooked, TestData);
 }
 

@@ -1,0 +1,96 @@
+version: 1.0.{build}
+branches:
+  only:
+  - x64_support
+  - master
+image: Visual Studio 2017
+
+environment:
+  matrix:
+  - PlatformToolset: v141_xp
+
+configuration:
+- Release
+- Debug
+
+platform:
+- x86
+- x64
+
+install:
+    - if "%platform%"=="x64" set archi=amd64
+    - if "%platform%"=="x64" set platform_input=x64
+
+    - if "%platform%"=="x86" set archi=x86
+    - if "%platform%"=="x86" set platform_input=Win32
+
+    - if "%PlatformToolset%"=="v140_xp" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
+    - if "%PlatformToolset%"=="v141_xp" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %archi%
+
+before_build:
+- cmd: >-
+    git clone https://github.com/google/googletest
+
+    cd googletest && mkdir build && cd build
+
+    echo "PLATFORM=%PLATFORM%"
+
+    echo "CONFIGURATION=%CONFIGURATION%"
+
+    IF "%PLATFORM%"=="x86" (SET CMAKE_COMPILER="Visual Studio 15 2017") ELSE (SET CMAKE_COMPILER="Visual Studio 15 2017 Win64")
+
+    echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
+
+    cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=c:\projects\googletest_release\%PLATFORM% -G %CMAKE_COMPILER% ..
+
+    cmake --build . --target install --config %CONFIGURATION%
+
+    cd ..\..
+
+    echo const wchar_t SAVE_AS_ADMIN_VERSION[] = L"%APPVEYOR_BUILD_VERSION%"; > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
+
+build_script:
+    - cmd: cd "%APPVEYOR_BUILD_FOLDER%"
+    - cmd: msbuild UnitTests/UnitTests.vcxproj /m /p:configuration="%configuration%" /p:platform="%platform_input%" /p:PlatformToolset="%PlatformToolset%" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+test_script:
+- ps: >-
+    $BASE_EXE_PATH = "C:\projects\nppsaveasadmin\UnitTests\"
+
+
+    if ("$env:PLATFORM" -eq "x64") {$BASE_EXE_PATH = $BASE_EXE_PATH + "x64\"}
+
+
+    $TEST_EXE_PATH = $BASE_EXE_PATH + $env:CONFIGURATION + "\UnitTests.exe"
+
+
+    echo "test exe = $TEST_EXE_PATH"
+
+    & $TEST_EXE_PATH --gtest_output="xml:C:\projects\test_results.xml"
+
+    $TestResult=$LastExitCode
+
+    echo "Tests finished with code $TestResult"
+
+
+    echo "Uploading test results"
+
+    $wc = New-Object 'System.Net.WebClient'
+
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path C:\projects\test_results.xml))
+
+
+    if ($TestResult -ne 0) {exit $TestResult}
+artifacts:
+- path: UnitTests/%CONFIGURATION%/UnitTests.exe
+  name: Unit test x86 binary
+- path: NppSaveAsAdmin/vs.proj/x64/Debug/NppSaveAsAdmin.dll
+  name: x64 Debug binary
+- path: NppSaveAsAdmin/bin64/NppSaveAsAdmin.dll
+  name: x64 Release binary
+- path: UnitTests/x64/%CONFIGURATION%/UnitTests.exe
+  name: Unit test x64 binary
+- path: NppSaveAsAdmin/bin/NppSaveAsAdmin.dll
+  name: x86 Release binary
+- path: NppSaveAsAdmin/vs.proj/Debug/NppSaveAsAdmin.dll
+  name: x86 Debug binary
