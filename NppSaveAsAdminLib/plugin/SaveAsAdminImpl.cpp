@@ -15,14 +15,13 @@ class SaveAsAdminImpl::Impl {
   Impl(AdminAccessRunner& admin_access_runner)
       : m_admin_access_runner(admin_access_runner) {
     m_write_file =
-        inject(WriteFile, make_injection_callback(*this, &Impl::write_file_hook));
-    m_create_filea = inject(
-        CreateFileA, make_injection_callback(*this, &Impl::create_file_a_hook));
-    m_create_filew = inject(
+        inject_in_module("Kernel32.dll", WriteFile, make_injection_callback(*this, &Impl::write_file_hook));
+    
+    m_create_filew = inject_in_module("Kernel32.dll",
         CreateFileW, make_injection_callback(*this, &Impl::create_file_w_hook));
-    m_get_file_type = inject(
+    m_get_file_type = inject_in_module("Kernel32.dll",
         GetFileType, make_injection_callback(*this, &Impl::get_file_type_hook));
-    m_close_handle = inject(
+    m_close_handle = inject_in_module("Kernel32.dll",
         CloseHandle, make_injection_callback(*this, &Impl::close_handle_hook));
   }
 
@@ -54,18 +53,6 @@ class SaveAsAdminImpl::Impl {
                                          number_of_bytes_to_write,
                                          number_of_bytes_written, overlapped);
     }
-  }
-
-  HANDLE create_file_a_hook(LPCSTR file_name,
-                         DWORD desired_access,
-                         DWORD share_mode,
-                         LPSECURITY_ATTRIBUTES security_attributes,
-                         DWORD creation_disposition,
-                         DWORD flags_and_attributes,
-                         HANDLE template_file) {
-    return m_create_filea->call_original(
-        file_name, desired_access, share_mode, security_attributes,
-        creation_disposition, flags_and_attributes, template_file);
   }
 
   HANDLE create_file_w_hook(LPCWSTR file_name,
@@ -157,7 +144,6 @@ class SaveAsAdminImpl::Impl {
   HandleMap m_file_handles;
 
   injection_ptr_type(WriteFile) m_write_file;
-  injection_ptr_type(CreateFileA) m_create_filea;
   injection_ptr_type(CreateFileW) m_create_filew;
   injection_ptr_type(GetFileType) m_get_file_type;
   injection_ptr_type(CloseHandle) m_close_handle;
@@ -174,18 +160,6 @@ class SaveAsAdminImpl::Impl {
       return m_impl.m_write_file->call_original(
           file_handle, buffer, number_of_bytes_to_write,
           number_of_bytes_written, overlapped);
-    }
-
-    HANDLE create_file_a(LPCSTR file_name,
-                           DWORD desired_access,
-                           DWORD share_mode,
-                           LPSECURITY_ATTRIBUTES security_attributes,
-                           DWORD creation_disposition,
-                           DWORD flags_and_attributes,
-                           HANDLE template_file) override {
-      return m_impl.m_create_filea->call_original(
-          file_name, desired_access, share_mode, security_attributes,
-          creation_disposition, flags_and_attributes, template_file);
     }
 
     HANDLE create_file_w(LPCWSTR file_name,

@@ -1,0 +1,1 @@
+const wchar_t SAVE_AS_ADMIN_VERSION[] = L"0.0.0 (dev)";

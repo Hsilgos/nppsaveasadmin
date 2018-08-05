@@ -30,6 +30,7 @@
     <ClInclude Include="..\src\Notepad_plus_msgs.h" />
     <ClInclude Include="..\src\PluginDefinition.h" />
     <ClInclude Include="..\src\PluginInterface.h" />
+    <ClInclude Include="..\src\plugin\SaveAsAdminVersion.hpp" />
     <ClInclude Include="..\src\Scintilla.h" />
   </ItemGroup>
   <ItemGroup>
@@ -55,6 +56,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>NppPluginTemplate</RootNamespace>
     <ProjectName>NppSaveAsAdmin</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

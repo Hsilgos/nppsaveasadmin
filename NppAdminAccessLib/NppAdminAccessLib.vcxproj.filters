@@ -24,9 +24,6 @@
     <ClCompile Include="CloseHandleCommand.cpp">
       <Filter>Source Files\commands</Filter>
     </ClCompile>
-    <ClCompile Include="CreateFileACommand.cpp">
-      <Filter>Source Files\commands</Filter>
-    </ClCompile>
     <ClCompile Include="CreateFileWCommand.cpp">
       <Filter>Source Files\commands</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloseHandleCommand.hpp">
-      <Filter>Header Files\commands</Filter>
-    </ClInclude>
-    <ClInclude Include="CreateFileACommand.hpp">
       <Filter>Header Files\commands</Filter>
     </ClInclude>
     <ClInclude Include="CreateFileWCommand.hpp">

@@ -1,7 +1,6 @@
 #include "CommandManager.hpp"
 
 #include "CloseHandleCommand.hpp"
-#include "CreateFileACommand.hpp"
 #include "CreateFileWCommand.hpp"
 #include "GetFileTypeCommand.hpp"
 #include "WriteFileCommand.hpp"
@@ -33,8 +32,6 @@ void register_default_commands(CommandManager& manager,
                                IWinApiFunctions& winapi) {
   manager.register_command(CloseHandleCmd,
                            make_close_handle_command(winapi));
-  manager.register_command(CreateFileACmd,
-                           make_create_filea_command(winapi));
   manager.register_command(CreateFileWCmd,
                            make_create_filew_command(winapi));
   manager.register_command(WriteFileCmd,

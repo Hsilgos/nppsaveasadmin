@@ -178,6 +178,9 @@
     <ProjectReference Include="..\NppSaveAsAdminLib\NppSaveAsAdminLib.vcxproj">
       <Project>{f10e6e67-956f-4847-9110-8b4eb56a2857}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\NppSaveAsAdmin\vs.proj\NppPluginTemplate.vcxproj">
+      <Project>{9d04dbd5-e12e-44e0-a683-6f43f21d533b}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExecutionThread.hpp" />

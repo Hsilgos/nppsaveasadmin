@@ -17,6 +17,7 @@
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
+#include "plugin/SaveAsAdminVersion.hpp"
 
 #include <sstream>
 #include <vector>
@@ -31,8 +32,6 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
-std::wstring g_version;
-
 static std::wstring get_path(HANDLE hModule) {
   TCHAR module_file[2048] = {0};
   const int result_size =
@@ -40,44 +39,10 @@ static std::wstring get_path(HANDLE hModule) {
   return std::wstring(module_file, result_size);
 }
 
-static std::wstring get_exe_version(const std::wstring& exe_file_name,
-                                    const std::wstring& field_name) {
-  DWORD pointless_win32_variable = 0;
-  DWORD size =
-      GetFileVersionInfoSizeW(exe_file_name.c_str(), &pointless_win32_variable);
-
-  if (size > 0) {
-    std::vector<char> exe_info;
-    exe_info.resize(size);
-
-    if (GetFileVersionInfoW(exe_file_name.c_str(), 0, size, &exe_info[0])) {
-      wchar_t* result = 0;
-      unsigned int result_length = 0;
-
-      // try the 1200 codepage (Unicode)
-      std::wstring query_string(L"\\StringFileInfo\\041904B0\\" + field_name);
-
-      if (!VerQueryValueW(&exe_info[0], query_string.c_str(), (void**)&result,
-                          &result_length)) {
-        // try the 1252 codepage (Windows Multilingual)
-        query_string = L"\\StringFileInfo\\041904E4\\" + field_name;
-        VerQueryValueW(&exe_info[0], query_string.c_str(), (void**)&result,
-                       &result_length);
-      }
-
-      if (result && result_length > 0)
-        return std::wstring(result, result_length - 1);
-    }
-  }
-
-  return std::wstring();
-}
-
 //
 // Initialize your plugin data here
 // It will be called while plugin loading
 void pluginInit(HANDLE hModule) {
-  g_version = get_exe_version(get_path(hModule), L"FileVersion");
 }
 
 //
@@ -86,6 +51,9 @@ void pluginInit(HANDLE hModule) {
 //
 void pluginCleanUp() {}
 
+void do_injection();
+void un_do_injection();
+
 //
 // Initialization of your plugin commands
 // You should fill your plugins commands here
@@ -93,8 +61,8 @@ void commandMenuInit() {
   setCommand(0, TEXT("About"), about, NULL, false);
 
   if (is_debugging()) {
-    // setCommand(1, TEXT("Hook"), do_injection, NULL, false);
-    // setCommand(2, TEXT("Unhook"), un_do_injection, NULL, false);
+    setCommand(1, TEXT("Hook"), do_injection, NULL, false);
+    setCommand(2, TEXT("Unhook"), un_do_injection, NULL, false);
   }
 }
 
@@ -133,8 +101,8 @@ bool setCommand(size_t index,
 void about() {
   std::wstringstream info;
   info << L"Notepad++ SaveAsAdmin plugin" << std::endl;
-  info << L"Version: " << g_version << std::endl;
-  info << L"Author: Khnykin Evgeniy";
+  info << L"Version: " << SAVE_AS_ADMIN_VERSION << std::endl;
+  info << L"Author: Khnykin Yauheni";
 
   ::MessageBox(NULL, info.str().c_str(), TEXT("About"), MB_OK);
 }

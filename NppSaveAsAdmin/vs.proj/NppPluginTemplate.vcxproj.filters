@@ -25,6 +25,9 @@
     <ClInclude Include="..\src\PluginDefinition.h">
       <Filter>plugin</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\plugin\SaveAsAdminVersion.hpp">
+      <Filter>plugin</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\DockingFeature\goLine.rc" />
