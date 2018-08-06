@@ -24,7 +24,6 @@ install:
     - if "%platform%"=="x86" set archi=x86
     - if "%platform%"=="x86" set platform_input=Win32
 
-    - if "%PlatformToolset%"=="v140_xp" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %archi%
     - if "%PlatformToolset%"=="v141_xp" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %archi%
 
 before_build:
@@ -57,12 +56,9 @@ test_script:
 - ps: >-
     $BASE_EXE_PATH = "C:\projects\nppsaveasadmin\UnitTests\"
 
-
     if ("$env:PLATFORM" -eq "x64") {$BASE_EXE_PATH = $BASE_EXE_PATH + "x64\"}
 
-
     $TEST_EXE_PATH = $BASE_EXE_PATH + $env:CONFIGURATION + "\UnitTests.exe"
-
 
     echo "test exe = $TEST_EXE_PATH"
 
@@ -72,15 +68,14 @@ test_script:
 
     echo "Tests finished with code $TestResult"
 
-
     echo "Uploading test results"
 
     $wc = New-Object 'System.Net.WebClient'
 
     $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path C:\projects\test_results.xml))
 
-
     if ($TestResult -ne 0) {exit $TestResult}
+
 artifacts:
 - path: UnitTests/%CONFIGURATION%/UnitTests.exe
   name: Unit test x86 binary
