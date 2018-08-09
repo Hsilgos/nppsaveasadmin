@@ -52,6 +52,22 @@ build_script:
     - cmd: cd "%APPVEYOR_BUILD_FOLDER%"
     - cmd: msbuild UnitTests/UnitTests.vcxproj /m /p:configuration="%configuration%" /p:platform="%platform_input%" /p:PlatformToolset="%PlatformToolset%" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
+after_build:
+    - cmd: cd "%APPVEYOR_BUILD_FOLDER%"
+    - ps: >-
+
+        if ($env:CONFIGURATION -eq "Release") {
+            if($env:PLATFORM -eq "x64") {
+                $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x64.zip"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin64\NppSaveAsAdmin.dll"
+            }
+            if($env:PLATFORM -eq "x86") {
+                $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x86.zip"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppSaveAsAdmin.dll"
+            }
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\README.md"
+        }
+
 test_script:
 - ps: >-
     $BASE_EXE_PATH = "C:\projects\nppsaveasadmin\UnitTests\"
@@ -77,6 +93,8 @@ test_script:
     if ($TestResult -ne 0) {exit $TestResult}
 
 artifacts:
+- path: NppSaveAsAdmin_*.zip
+  name: release
 - path: UnitTests/%CONFIGURATION%/UnitTests.exe
   name: Unit test x86 binary
 - path: NppSaveAsAdmin/vs.proj/x64/Debug/NppSaveAsAdmin.dll
