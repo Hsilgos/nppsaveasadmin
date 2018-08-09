@@ -94,7 +94,7 @@ test_script:
 
 artifacts:
 - path: NppSaveAsAdmin_*.zip
-  name: release
+  name: release_package
 - path: UnitTests/%CONFIGURATION%/UnitTests.exe
   name: Unit test x86 binary
 - path: NppSaveAsAdmin/vs.proj/x64/Debug/NppSaveAsAdmin.dll
@@ -107,3 +107,16 @@ artifacts:
   name: x86 Release binary
 - path: NppSaveAsAdmin/vs.proj/Debug/NppSaveAsAdmin.dll
   name: x86 Debug binary
+
+deploy:
+    provider: GitHub
+    auth_token:
+        secure: 6TQ/ECbh22HvTfxCyQQCE8j+Mlcu4qEapi5xOKto9YEYEf0Pf6daE3bmJ8DFFp2h
+    artifact: release_package
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+        appveyor_repo_tag: true
+        PlatformToolset: v141_xp
+        configuration: Release
