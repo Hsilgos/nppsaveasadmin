@@ -101,8 +101,9 @@ bool setCommand(size_t index,
 void about() {
   std::wstringstream info;
   info << L"Notepad++ SaveAsAdmin plugin" << std::endl;
-  info << L"Version: " << SAVE_AS_ADMIN_VERSION << std::endl;
-  info << L"Author: Khnykin Yauheni";
+  info << L"Version: " << SAVE_AS_ADMIN_VERSION_UNICODE << std::endl;
+  info << L"Author: Khnykin Yauheni" << std::endl;
+  info << L"Email: yauheni.khnykin@gmail.com" << std::endl;
 
   ::MessageBox(NULL, info.str().c_str(), TEXT("About"), MB_OK);
 }
