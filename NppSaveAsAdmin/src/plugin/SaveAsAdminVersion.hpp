@@ -1,1 +1,3 @@
-const wchar_t SAVE_AS_ADMIN_VERSION[] = L"0.0.0 (dev)";
+#define SAVE_AS_ADMIN_VERSION "0.0.1"
+#define SAVE_AS_ADMIN_VERSION_UNICODE L"0.0.1"
+#define SAVE_AS_ADMIN_VERSION_DIGITAL 0, 0, 1, 0

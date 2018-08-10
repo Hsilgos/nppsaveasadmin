@@ -46,7 +46,7 @@ before_build:
 
     cd ..\..
 
-    echo const wchar_t SAVE_AS_ADMIN_VERSION[] = L"%APPVEYOR_BUILD_VERSION%"; > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
+    python GenerateVersionHeader.py %APPVEYOR_BUILD_VERSION% > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
 
 build_script:
     - cmd: cd "%APPVEYOR_BUILD_FOLDER%"
@@ -66,6 +66,7 @@ after_build:
                 7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppSaveAsAdmin.dll"
             }
             7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\README.md"
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\license.txt"
         }
 
 test_script:
