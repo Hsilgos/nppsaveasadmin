@@ -1,0 +1,7 @@
+**/Debug/*
+**/Release/*
+*.user
+*.ipch
+*.db
+NppSaveAsAdminLib/plugin/generated/NppAdminAccess.cpp
+NppSaveAsAdminLib/plugin/generated/NppAdminAccess.h
