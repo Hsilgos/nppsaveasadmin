@@ -59,17 +59,14 @@ after_build:
         if ($env:CONFIGURATION -eq "Release") {
             if($env:PLATFORM -eq "x64") {
                 $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x64.zip"
-                cp "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin64\NppSaveAsAdmin.dll" "NppSaveAsAdmin\NppSaveAsAdmin.dll"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin64\NppSaveAsAdmin.dll"
             }
             if($env:PLATFORM -eq "x86") {
                 $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x86.zip"
-                cp "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppSaveAsAdmin.dll" "NppSaveAsAdmin\NppSaveAsAdmin.dll"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppSaveAsAdmin.dll"
             }
-            cp "$($env:APPVEYOR_BUILD_FOLDER)\README.md" "NppSaveAsAdmin\README.md"
-
-            7z a $ZipFileName "NppSaveAsAdmin\NppSaveAsAdmin.dll"
-            7z a $ZipFileName "NppSaveAsAdmin\README.md"
-            7z a $ZipFileName "NppSaveAsAdmin\license.txt"
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\README.md"
+            7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\license.txt"
         }
 
 test_script:
