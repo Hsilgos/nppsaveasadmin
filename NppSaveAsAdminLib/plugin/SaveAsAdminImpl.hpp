@@ -21,8 +21,8 @@ class SaveAsAdminImpl {
   SaveAsAdminImpl(AdminAccessRunner& admin_access_runner);
   ~SaveAsAdminImpl();
 
-  void allow_process_file(const std::wstring& filename);
-  void cancel_process_file(const std::wstring& filename);
+  void allow_process_file();
+  void cancel_process_file();
 
  private:
   class Impl;

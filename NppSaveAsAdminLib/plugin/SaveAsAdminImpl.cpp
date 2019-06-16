@@ -23,17 +23,16 @@ class SaveAsAdminImpl::Impl {
         GetFileType, make_injection_callback(*this, &Impl::get_file_type_hook));
     m_close_handle = inject_in_module("Kernel32.dll",
         CloseHandle, make_injection_callback(*this, &Impl::close_handle_hook));
+	m_get_save_file_name_w = inject_in_module("Comdlg32.dll",
+		GetSaveFileNameW, make_injection_callback(*this, &Impl::get_save_file_name_hook));
   }
 
-  void allow_process_file(const std::wstring& filename) {
-    if (!filename.empty())
-      m_allowed_to_process_files.insert(filename);
+  void allow_process_file() {
+	m_is_process_allowed = true;
   }
 
-  void cancel_process_file(const std::wstring& filename) {
-    auto it = m_allowed_to_process_files.find(filename);
-    if (it != m_allowed_to_process_files.end())
-      m_allowed_to_process_files.erase(it);
+  void cancel_process_file() {
+	m_is_process_allowed = false;
   }
 
  private:
@@ -68,9 +67,7 @@ class SaveAsAdminImpl::Impl {
 
     if (INVALID_HANDLE_VALUE == result && (desired_access & GENERIC_WRITE)) {
       const int error_code = GetLastError();
-      if (ERROR_ACCESS_DENIED == error_code &&
-          m_allowed_to_process_files.find(file_name) !=
-              m_allowed_to_process_files.end()) {
+      if (ERROR_ACCESS_DENIED == error_code && m_is_process_allowed) {
         std::unique_ptr<FileHandle> new_handle = std::make_unique<FileHandle>();
         new_handle->pipe_sender = Pipe::create_unique();
         new_handle->pipe_receiver = Pipe::create_unique();
@@ -105,6 +102,11 @@ class SaveAsAdminImpl::Impl {
     return result;
   }
 
+  BOOL get_save_file_name_hook(LPOPENFILENAMEW ofn) {
+	  ofn->Flags |= OFN_NOTESTFILECREATE;
+	  return m_get_save_file_name_w->call_original(ofn);
+  }
+
   BOOL close_handle_hook(HANDLE handle) {
     HandleMap::iterator it = m_file_handles.find(handle);
     if (it != m_file_handles.end()) {
@@ -131,7 +133,7 @@ class SaveAsAdminImpl::Impl {
 
  private:
   AdminAccessRunner& m_admin_access_runner;
-  std::set<std::wstring> m_allowed_to_process_files;
+  bool m_is_process_allowed = false;
 
   struct FileHandle {
     std::unique_ptr<Pipe> pipe_sender;
@@ -147,6 +149,7 @@ class SaveAsAdminImpl::Impl {
   injection_ptr_type(CreateFileW) m_create_filew;
   injection_ptr_type(GetFileType) m_get_file_type;
   injection_ptr_type(CloseHandle) m_close_handle;
+  injection_ptr_type(GetSaveFileNameW) m_get_save_file_name_w;
 
   class DefaultOriginalFunctions : public IWinApiFunctions {
    public:
@@ -213,10 +216,10 @@ SaveAsAdminImpl::SaveAsAdminImpl(AdminAccessRunner& admin_access_runner)
 
 SaveAsAdminImpl::~SaveAsAdminImpl() = default;
 
-void SaveAsAdminImpl::allow_process_file(const std::wstring& filename) {
-  m_impl->allow_process_file(filename);
+void SaveAsAdminImpl::allow_process_file() {
+  m_impl->allow_process_file();
 }
 
-void SaveAsAdminImpl::cancel_process_file(const std::wstring& filename) {
-  m_impl->allow_process_file(filename);
+void SaveAsAdminImpl::cancel_process_file() {
+  m_impl->allow_process_file();
 }

@@ -225,9 +225,9 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHooked) {
 
   const char* TestData = "Test_data";
 
-  save_as_admin_impl.allow_process_file(TestFileNameW1);
+  save_as_admin_impl.allow_process_file();
   ProcessWriteFile(TestFileNameW1, TestData);
-  save_as_admin_impl.cancel_process_file(TestFileNameW1);
+  save_as_admin_impl.cancel_process_file();
 
   check_file_not_exists(TestFileNameW1);
   original_functions.allow_create();
@@ -255,9 +255,9 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecaueNotNeeded) 
 
 	const char* TestData = "Test_data";
 
-	save_as_admin_impl.allow_process_file(TestFileNameW1);
+	save_as_admin_impl.allow_process_file();
 	ProcessWriteFile(TestFileNameW1, TestData);
-	save_as_admin_impl.cancel_process_file(TestFileNameW1);
+	save_as_admin_impl.cancel_process_file();
 
 	check_file_exists(TestFileNameW1, TestData);
 	check_file_not_exists(TestFileNameW1_Hooked);
