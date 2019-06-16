@@ -18,8 +18,6 @@ const std::string TestFileNameA1 = "test_wfile1.txt";
 const std::wstring TestFileNameW1 = L"test_wfile1.txt";
 const std::string TestFileNameA1_Hooked = "test_wfile1.txt-hooked";
 const std::wstring TestFileNameW1_Hooked = L"test_wfile1.txt-hooked";
-// const std::string HookedAPrefix = "hooked-";
-// const std::wstring HookedWPrefix = L"hooked-";
 
 class MockAdminAccessRunner : public AdminAccessRunner {
  public:
@@ -132,8 +130,16 @@ struct SaveAsAdminImplFixture : public ::testing::Test {
   MockAdminAccessRunner mock_admin_access_runner;
   SaveAsAdminImpl save_as_admin_impl;
 
+  void ensure_that_comdlg32_dll_is_imported() {
+	  std::ifstream file("none_existing.file");
+	  if (file) {
+		  GetSaveFileNameW(NULL);
+	  }
+  }
+
   SaveAsAdminImplFixture()
       : execution_thread(false), save_as_admin_impl(mock_admin_access_runner) {
+	ensure_that_comdlg32_dll_is_imported();
     ON_CALL(mock_winapi_rename, create_file_a(_, _, _, _, _, _, _))
         .WillByDefault(
             Invoke(this, &SaveAsAdminImplFixture::create_file_a_rename));
@@ -225,9 +231,9 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHooked) {
 
   const char* TestData = "Test_data";
 
-  save_as_admin_impl.allow_process_file(TestFileNameW1);
+  save_as_admin_impl.allow_process_file();
   ProcessWriteFile(TestFileNameW1, TestData);
-  save_as_admin_impl.cancel_process_file(TestFileNameW1);
+  save_as_admin_impl.cancel_process_file();
 
   check_file_not_exists(TestFileNameW1);
   original_functions.allow_create();
@@ -247,7 +253,7 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecauseNotAllowed
 	check_file_not_exists(TestFileNameW1_Hooked);
 }
 
-TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecaueNotNeeded) {
+TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecauseNotNeeded) {
 	original_functions.allow_create();
 	const auto remove_files =
 		FileAutoremover({ TestFileNameA1, TestFileNameA1_Hooked });
@@ -255,9 +261,9 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecaueNotNeeded) 
 
 	const char* TestData = "Test_data";
 
-	save_as_admin_impl.allow_process_file(TestFileNameW1);
+	save_as_admin_impl.allow_process_file();
 	ProcessWriteFile(TestFileNameW1, TestData);
-	save_as_admin_impl.cancel_process_file(TestFileNameW1);
+	save_as_admin_impl.cancel_process_file();
 
 	check_file_exists(TestFileNameW1, TestData);
 	check_file_not_exists(TestFileNameW1_Hooked);

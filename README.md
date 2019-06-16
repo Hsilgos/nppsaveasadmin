@@ -4,7 +4,7 @@ Notepad++ Plugin nppSaveAsAdmin
 Allows to save file as administrator with UAC prompt.
 
 ## Installation
-Unpack to "%NOTEPAD-FOLDER-DIR%/plugins" to install
+Unpack to "%APPDATA%/Notepad++/plugins" to install
 
 
 ## Build Status

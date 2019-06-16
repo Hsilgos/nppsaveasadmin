@@ -28,7 +28,7 @@ void un_do_injection() {
 
 //////////////////////////////////////////////////////////////////////////
 
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved) {
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID /*lpReserved*/) {
   switch (reasonForCall) {
     case DLL_PROCESS_ATTACH:
       pluginInit(hModule);
@@ -67,34 +67,16 @@ extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF) {
   return funcItem;
 }
 
-std::wstring current_file_path(SCNotification* notifyCode) {
-  int avar = SendMessage(nppData._nppHandle, NPPM_GETFULLPATHFROMBUFFERID,
-                         (WPARAM)notifyCode->nmhdr.idFrom, (LPARAM)NULL);
-
-  if (avar == 0)
-    return std::wstring();
-
-  std::vector<wchar_t> theFullPath(avar + 1);
-  theFullPath[0] = 0;
-  avar =
-      SendMessage(nppData._nppHandle, NPPM_GETFULLPATHFROMBUFFERID,
-                  (WPARAM)notifyCode->nmhdr.idFrom, (LPARAM)theFullPath.data());
-
-  std::wstring tPath = theFullPath.data();
-
-  return tPath;
-}
-
 extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode) {
   switch (notifyCode->nmhdr.code) {
     case NPPN_FILEBEFORESAVE:
 		if (m_save_as_admin_impl) {
-			m_save_as_admin_impl->allow_process_file(current_file_path(notifyCode));
+			m_save_as_admin_impl->allow_process_file();
 		}
       break;
     case NPPN_FILESAVED:
 		if (m_save_as_admin_impl) {
-			m_save_as_admin_impl->cancel_process_file(current_file_path(notifyCode));
+			m_save_as_admin_impl->cancel_process_file();
 		}
       break;
     default:
@@ -108,7 +90,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode) {
 // messages : http://sourceforge.net/forum/forum.php?forum_id=482781
 //
 extern "C" __declspec(dllexport) LRESULT
-    messageProc(UINT Message, WPARAM wParam, LPARAM lParam) {
+    messageProc(UINT /*Message*/, WPARAM /*wParam*/, LPARAM /*lParam*/) {
   return TRUE;
 }
 
