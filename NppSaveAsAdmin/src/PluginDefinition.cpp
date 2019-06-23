@@ -32,17 +32,17 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
-static std::wstring get_path(HANDLE hModule) {
+/*static std::wstring get_path(HANDLE hModule) {
   TCHAR module_file[2048] = {0};
   const int result_size =
       GetModuleFileName((HMODULE)hModule, module_file, 2048);
   return std::wstring(module_file, result_size);
-}
+}*/
 
 //
 // Initialize your plugin data here
 // It will be called while plugin loading
-void pluginInit(HANDLE hModule) {
+void pluginInit(HANDLE /*hModule*/) {
 }
 
 //

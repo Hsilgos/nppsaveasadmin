@@ -218,7 +218,7 @@ struct SaveAsAdminImplFixture : public ::testing::Test {
     HANDLE handle = CreateFileW(file_name.c_str(), GENERIC_WRITE, 0, NULL,
                                 CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     ASSERT_NE(INVALID_HANDLE_VALUE, handle);
-    EXPECT_TRUE(WriteFile(handle, data.c_str(), data.size(), NULL, NULL));
+    EXPECT_TRUE(WriteFile(handle, data.c_str(), get_size_as_ulong(data), NULL, NULL));
     CloseHandle(handle);
   }
 };

@@ -55,7 +55,7 @@ class InjectionFixture : public ::testing::Test {
     HANDLE file = create_file_default();
     ASSERT_NE(INVALID_HANDLE_VALUE, file);
     EXPECT_TRUE(
-        WriteFile(file, TestBuffer.c_str(), TestBuffer.size(), NULL, NULL));
+        WriteFile(file, TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL, NULL));
     CloseHandle(file);
   }
 
@@ -90,7 +90,7 @@ TEST_F(InjectionFixture, CreateFileIsHookedAndReleased) {
   create_file.reset();
   file_handle = create_file_default();
   ASSERT_NE(INVALID_HANDLE_VALUE, file_handle);
-  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), TestBuffer.size(),
+  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                         NULL, NULL));
   CloseHandle(file_handle);
 
@@ -108,7 +108,7 @@ TEST_F(InjectionFixture, CreateFileIsHookedAndReleased_NoModule) {
   create_file.reset();
   file_handle = create_file_default();
   ASSERT_NE(INVALID_HANDLE_VALUE, file_handle);
-  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), TestBuffer.size(),
+  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                         NULL, NULL));
   CloseHandle(file_handle);
 
@@ -218,7 +218,7 @@ TEST_F(InjectionFixture, CallOriginalFunctionAfterHook) {
       create_file->call_original(TestFileName1, GENERIC_WRITE, 0, NULL,
                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
   ASSERT_NE(INVALID_HANDLE_VALUE, file_handle);
-  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), TestBuffer.size(),
+  EXPECT_TRUE(WriteFile(file_handle, TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                         NULL, NULL));
   CloseHandle(file_handle);
 

@@ -23,3 +23,8 @@ class FileAutoremover {
   }
   const std::vector<std::string> m_filenames;
 };
+
+template<class Container>
+inline DWORD get_size_as_ulong(const Container& container) {
+	return static_cast<DWORD>(container.size());
+}
