@@ -5,15 +5,16 @@
 #include <string>
 #include <vector>
 
+#include "UniqueHandle.hpp"
+
 class Pipe final {
-  const HANDLE m_pipe;
+  const UniqueHandle<> m_pipe;
   const std::wstring m_name;
 
-  Pipe(HANDLE pipe, std::wstring name);
-  static std::unique_ptr<Pipe> create(HANDLE pipe, std::wstring name);
+  Pipe(UniqueHandle<> pipe, std::wstring name);
+  static std::unique_ptr<Pipe> create(UniqueHandle<> pipe, std::wstring name);
 
  public:
-  ~Pipe();
 
   static std::unique_ptr<Pipe> create(const std::wstring& name);
   static std::unique_ptr<Pipe> create_unique();
