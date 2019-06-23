@@ -14,7 +14,7 @@ bool execute_function(Pipe& pipe_sender,
   std::vector<char> read_buffer;
 
   PacketWithCommand<InData>* in_ptr =
-      prepareVectorToStoreData<PacketWithCommand<InData>>(in_buffer);
+      prepare_vector_to_store_data<PacketWithCommand<InData>>(in_buffer);
   in_ptr->command = cmd_num;
   in_ptr->commandData = in_data;
 
@@ -22,7 +22,7 @@ bool execute_function(Pipe& pipe_sender,
     return false;
 
   const bool read_result = pipe_receiver.read(read_buffer);
-  return read_result && readDataFromVector(out_data, read_buffer);
+  return read_result && read_data_from_vector(out_data, read_buffer);
 }
 
 HANDLE execute_create_file_w(Pipe& pipe_sender,
@@ -131,5 +131,5 @@ BOOL execute_close_handle(Pipe& pipe_sender,
 
 void execute_exit(Pipe& pipe_sender) {
   char code = ExitCmd;
-  pipe_sender.write(dataToVector(code));
+  pipe_sender.write(data_to_vector(code));
 }

@@ -112,7 +112,7 @@ struct CorruptedDataFixture : public FuncExecutorFixture {
       std::make_shared<MockCommand>(mock_winapi);
   template <class ResultType>
   void prepare_test_incorrect_return_data_size(int resize_diff, Commands cmd) {
-    prepareVectorToStoreData<ResultType>(incorrect_return_data);
+    prepare_vector_to_store_data<ResultType>(incorrect_return_data);
     const int new_size =
         static_cast<int>(incorrect_return_data.size()) + resize_diff;
     incorrect_return_data.resize(new_size);
@@ -232,7 +232,7 @@ TEST_F(FuncExecutorFixture, CreateFileLastErrorIsAccesDenied) {
       std::make_shared<MockCommand>(mock_winapi);
   std::vector<char> ret_data;
   CreateFileResult* create_file_result =
-      prepareVectorToStoreData<CreateFileResult>(ret_data);
+      prepare_vector_to_store_data<CreateFileResult>(ret_data);
   create_file_result->handle = INVALID_HANDLE_VALUE;
   create_file_result->last_error = ERROR_ACCESS_DENIED;
   execution_thread.command_manager.register_command(CreateFileWCmd,
@@ -286,7 +286,7 @@ TEST_F(FuncExecutorFixture, CreateFileEmptyData) {
 
 TEST_F(FuncExecutorFixture, CreateFileReturnedCorruptedDataLess) {
   std::vector<char> ret_data;
-  prepareVectorToStoreData<CreateFileResult>(ret_data);
+  prepare_vector_to_store_data<CreateFileResult>(ret_data);
   ret_data.resize(ret_data.size() - 1);
   MockWinApiFunctions mock_winapi;
   std::shared_ptr<MockCommand> mock_command =
@@ -303,7 +303,7 @@ TEST_F(FuncExecutorFixture, CreateFileReturnedCorruptedDataLess) {
 
 TEST_F(FuncExecutorFixture, CreateFileReturnedCorruptedDataMore) {
   std::vector<char> ret_data;
-  prepareVectorToStoreData<CreateFileResult>(ret_data);
+  prepare_vector_to_store_data<CreateFileResult>(ret_data);
   ret_data.resize(ret_data.size() + 1);
   MockWinApiFunctions mock_winapi;
   std::shared_ptr<MockCommand> mock_command =

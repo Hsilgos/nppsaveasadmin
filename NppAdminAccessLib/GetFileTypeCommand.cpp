@@ -13,7 +13,7 @@ class GetFileTypeCommand : public ICommand {
     if (!tgft)
       return false;
     GetFileTypeResult* result =
-        prepareVectorToStoreData<GetFileTypeResult>(ret_data);
+        prepare_vector_to_store_data<GetFileTypeResult>(ret_data);
 
     result->type = m_winapi.get_file_type(tgft->handle);
     result->last_error = GetLastError();

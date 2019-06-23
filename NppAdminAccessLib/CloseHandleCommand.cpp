@@ -13,7 +13,7 @@ class CloseHandleCommand : public ICommand {
     if (!tchd)
       return false;
     CloseHandleResult* result =
-        prepareVectorToStoreData<CloseHandleResult>(ret_data);
+        prepare_vector_to_store_data<CloseHandleResult>(ret_data);
 
     result->success =
         (TRUE == m_winapi.close_handle(tchd->handle));
