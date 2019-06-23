@@ -2,5 +2,4 @@
 
 #include "ICommand.hpp"
 
-std::unique_ptr<ICommand> make_file_type_command(
-    IWinApiFunctions& winapi);
+std::unique_ptr<ICommand> make_file_type_command(IWinApiFunctions& winapi);

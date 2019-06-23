@@ -30,12 +30,8 @@ ICommand* CommandManager::find_commad(Commands cmd_num) {
 
 void register_default_commands(CommandManager& manager,
                                IWinApiFunctions& winapi) {
-  manager.register_command(CloseHandleCmd,
-                           make_close_handle_command(winapi));
-  manager.register_command(CreateFileWCmd,
-                           make_create_filew_command(winapi));
-  manager.register_command(WriteFileCmd,
-                           make_write_file_command(winapi));
-  manager.register_command(GetFileTypeCmd,
-                           make_file_type_command(winapi));
+  manager.register_command(CloseHandleCmd, make_close_handle_command(winapi));
+  manager.register_command(CreateFileWCmd, make_create_filew_command(winapi));
+  manager.register_command(WriteFileCmd, make_write_file_command(winapi));
+  manager.register_command(GetFileTypeCmd, make_file_type_command(winapi));
 }

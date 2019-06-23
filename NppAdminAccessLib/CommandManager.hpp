@@ -19,4 +19,5 @@ class CommandManager {
   ICommand* find_commad(Commands cmd_num);
 };
 
-void register_default_commands(CommandManager& manager, IWinApiFunctions& original_functions);
+void register_default_commands(CommandManager& manager,
+                               IWinApiFunctions& original_functions);

@@ -15,15 +15,13 @@ class CloseHandleCommand : public ICommand {
     CloseHandleResult* result =
         prepare_vector_to_store_data<CloseHandleResult>(ret_data);
 
-    result->success =
-        (TRUE == m_winapi.close_handle(tchd->handle));
+    result->success = (TRUE == m_winapi.close_handle(tchd->handle));
     result->last_error = GetLastError();
 
     return true;
   }
 };
 
-std::unique_ptr<ICommand> make_close_handle_command(
-    IWinApiFunctions& winapi) {
+std::unique_ptr<ICommand> make_close_handle_command(IWinApiFunctions& winapi) {
   return std::make_unique<CloseHandleCommand>(winapi);
 }

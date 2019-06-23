@@ -16,8 +16,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NppAdminAccess", "..\..\Npp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "..\..\UnitTests\UnitTests.vcxproj", "{A25BA222-6DD6-46B2-9701-F0CE6C2B3BB0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CAA47112-6D75-466C-BA89-F024B9BA3018} = {CAA47112-6D75-466C-BA89-F024B9BA3018}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NppSaveAsAdminLib", "..\..\NppSaveAsAdminLib\NppSaveAsAdminLib.vcxproj", "{F10E6E67-956F-4847-9110-8B4EB56A2857}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CAA47112-6D75-466C-BA89-F024B9BA3018} = {CAA47112-6D75-466C-BA89-F024B9BA3018}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NppAdminAccessLib", "..\..\NppAdminAccessLib\NppAdminAccessLib.vcxproj", "{2394591E-0D3A-4444-8E04-4BFBD689C6A1}"
 EndProject

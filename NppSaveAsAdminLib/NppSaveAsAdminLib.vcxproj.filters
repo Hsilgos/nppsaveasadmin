@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\generated">
-      <UniqueIdentifier>{41da1a33-843d-489e-8a93-660c560cf6eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\generated">
-      <UniqueIdentifier>{8e975b7c-a86c-4820-861a-5d6ab4bbb3dc}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="plugin\AdminAccess.cpp">
@@ -27,17 +21,11 @@
     <ClCompile Include="plugin\FuncExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plugin\generated\NppAdminAccess.cpp">
-      <Filter>Source Files\generated</Filter>
-    </ClCompile>
     <ClCompile Include="plugin\SaveAsAdminImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin\generated\NppAdminAccess.h">
-      <Filter>Header Files\generated</Filter>
-    </ClInclude>
     <ClInclude Include="plugin\AdminAccess.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

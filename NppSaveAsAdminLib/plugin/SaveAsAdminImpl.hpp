@@ -9,15 +9,16 @@ class IWinApiFunctions;
 
 class AdminAccessRunner {
  public:
-  virtual HANDLE run_admin_access(IWinApiFunctions& original_functions,
-                                  const std::wstring& pipe_sender_name,
+  virtual HANDLE run_admin_access(const std::wstring& pipe_sender_name,
                                   const std::wstring& pipe_receiver_name) = 0;
+
+  static std::unique_ptr<AdminAccessRunner> make_default(
+      std::wstring admin_runner_exe_path);
   virtual ~AdminAccessRunner();
 };
 
 class SaveAsAdminImpl {
  public:
-  SaveAsAdminImpl();
   SaveAsAdminImpl(AdminAccessRunner& admin_access_runner);
   ~SaveAsAdminImpl();
 

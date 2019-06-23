@@ -5,7 +5,8 @@
 
 class IWinApiFunctions;
 
-void delete_admin_access();
-HANDLE run_admin_access_app(IWinApiFunctions& original_functions,
-                            const std::wstring& pipe_sender_name,
+HANDLE run_admin_access_app(const std::wstring& exe_path,
+						    const std::wstring& pipe_sender_name,
                             const std::wstring& pipe_receiver_name);
+
+bool file_exists(const std::wstring& file);

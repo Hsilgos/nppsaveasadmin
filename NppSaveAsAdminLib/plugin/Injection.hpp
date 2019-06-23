@@ -133,24 +133,24 @@ class ScopedInjector {
                  std::function<Ret(Args...)> callback) {
     static StaticFunctionWrapper<Unique> static_function;
     if (static_function.data.callback) {
-	  std::stringstream descr;
-	  descr << "You can't use same injection macro to ";
+      std::stringstream descr;
+      descr << "You can't use same injection macro to ";
       descr << " inject same function more than once.";
-	  if (function)
-		  descr << " Function:" << function;
-	  if (module)
-		  descr <<" in module: " << module;
+      if (function)
+        descr << " Function:" << function;
+      if (module)
+        descr << " in module: " << module;
       throw std::logic_error(descr.str());
     }
     static_function.data.callback = callback;
     m_data = &static_function.data;
-	try {
-		static_function.data.injection_result =
-			process_injection(module, function, static_function.injected_function);
-	} catch (...) {
-		static_function.data.callback = nullptr;
-		throw;
-	}
+    try {
+      static_function.data.injection_result = process_injection(
+          module, function, static_function.injected_function);
+    } catch (...) {
+      static_function.data.callback = nullptr;
+      throw;
+    }
   }
 
   ~ScopedInjector() {
