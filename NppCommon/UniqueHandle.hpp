@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-template <class HandleCloser = BOOL (*)(HANDLE)>
+template <class HandleCloser = BOOL(WINAPI*)(HANDLE)>
 class UniqueHandle final {
  public:
   UniqueHandle(const UniqueHandle&) = delete;
