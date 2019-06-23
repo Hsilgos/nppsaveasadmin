@@ -29,6 +29,11 @@
     <ClInclude Include="plugin\Injection.hpp" />
     <ClInclude Include="plugin\SaveAsAdminImpl.hpp" />
   </ItemGroup>
+  <ItemGroup>
+	  <ProjectReference Include="..\NppAdminAccess\NppAdminAccess.vcxproj">
+	    <Project>{caa47112-6d75-466c-ba89-f024b9ba3018}</Project>
+	  </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{F10E6E67-956F-4847-9110-8B4EB56A2857}</ProjectGuid>
