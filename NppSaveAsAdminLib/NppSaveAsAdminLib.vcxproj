@@ -30,9 +30,9 @@
     <ClInclude Include="plugin\SaveAsAdminImpl.hpp" />
   </ItemGroup>
   <ItemGroup>
-	  <ProjectReference Include="..\NppAdminAccess\NppAdminAccess.vcxproj">
-	    <Project>{caa47112-6d75-466c-ba89-f024b9ba3018}</Project>
-	  </ProjectReference>
+    <ProjectReference Include="..\NppAdminAccess\NppAdminAccess.vcxproj">
+      <Project>{caa47112-6d75-466c-ba89-f024b9ba3018}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
