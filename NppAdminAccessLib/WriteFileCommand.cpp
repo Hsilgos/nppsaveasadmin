@@ -13,7 +13,7 @@ class WriteFileCommand : public ICommand {
     if (!twfd)
       return false;
     WriteFileResult* result =
-        prepareVectorToStoreData<WriteFileResult>(ret_data);
+        prepare_vector_to_store_data<WriteFileResult>(ret_data);
 
     DWORD written = 0;
 

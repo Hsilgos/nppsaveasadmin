@@ -13,7 +13,7 @@ class CreateFileWCommand : public ICommand {
     if (!tofs)
       return false;
     CreateFileResult* result =
-        prepareVectorToStoreData<CreateFileResult>(ret_data);
+        prepare_vector_to_store_data<CreateFileResult>(ret_data);
 
     SECURITY_ATTRIBUTES security_attributes = {0};
     security_attributes.nLength = sizeof(security_attributes);

@@ -93,21 +93,21 @@ struct PacketWithCommand {
 };
 
 template <class T>
-T* prepareVectorToStoreData(std::vector<char>& data) {
+T* prepare_vector_to_store_data(std::vector<char>& data) {
   data.resize(sizeof(T), 0);
   return reinterpret_cast<T*>(data.data());
 }
 
 template <class T>
-std::vector<char> dataToVector(const T& data) {
+std::vector<char> data_to_vector(const T& data) {
   std::vector<char> result;
-  T* tBufferPtr = prepareVectorToStoreData<T>(result);
+  T* tBufferPtr = prepare_vector_to_store_data<T>(result);
   *tBufferPtr = data;
   return result;
 }
 
 template <class T>
-bool readDataFromVector(T& out, const std::vector<char>& data) {
+bool read_data_from_vector(T& out, const std::vector<char>& data) {
   if (data.size() != sizeof(T))
     return false;
   const T* data_ptr = reinterpret_cast<const T*>(data.data());
