@@ -15,7 +15,6 @@ class Pipe final {
   static std::unique_ptr<Pipe> create(UniqueHandle<> pipe, std::wstring name);
 
  public:
-
   static std::unique_ptr<Pipe> create(const std::wstring& name);
   static std::unique_ptr<Pipe> create_unique();
   static std::unique_ptr<Pipe> open(const std::wstring& name);

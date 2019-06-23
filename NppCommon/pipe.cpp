@@ -34,7 +34,7 @@ std::unique_ptr<Pipe> Pipe::create(UniqueHandle<> pipe, std::wstring name) {
 }
 
 std::unique_ptr<Pipe> Pipe::create(const std::wstring& name) {
-	UniqueHandle<> pipe(CreateNamedPipe(
+  UniqueHandle<> pipe(CreateNamedPipe(
       name.c_str(),                                  // pipe's name
       PIPE_ACCESS_DUPLEX /*|FILE_FLAG_OVERLAPPED*/,  //
       PIPE_TYPE_BYTE, 1, MaxBufferSize, MaxBufferSize, 10000, NULL));
@@ -57,11 +57,11 @@ std::unique_ptr<Pipe> Pipe::create_unique() {
 }
 
 std::unique_ptr<Pipe> Pipe::open(const std::wstring& name) {
-	UniqueHandle<> pipe(
-		CreateFile(name.c_str(),                  // pipe's name
-			GENERIC_READ | GENERIC_WRITE,  // only need read access
-			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL, NULL));
+  UniqueHandle<> pipe(
+      CreateFile(name.c_str(),                  // pipe's name
+                 GENERIC_READ | GENERIC_WRITE,  // only need read access
+                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                 FILE_ATTRIBUTE_NORMAL, NULL));
 
   if (!pipe)
     return nullptr;
