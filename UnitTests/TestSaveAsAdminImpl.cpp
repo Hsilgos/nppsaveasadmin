@@ -21,8 +21,8 @@ const std::wstring TestFileNameW1_Hooked = L"test_wfile1.txt-hooked";
 
 class MockAdminAccessRunner : public AdminAccessRunner {
  public:
-  MOCK_METHOD3(run_admin_access,
-               HANDLE(IWinApiFunctions&,
+  MOCK_METHOD2(run_admin_access,
+               HANDLE(
                       const std::wstring&,
                       const std::wstring&));
 };
@@ -190,8 +190,7 @@ struct SaveAsAdminImplFixture : public ::testing::Test {
 
   ~SaveAsAdminImplFixture() { execution_thread.wait(); }
 
-  HANDLE start_execute_thread1(IWinApiFunctions&,
-                               const std::wstring& pipe_sender_name,
+  HANDLE start_execute_thread1(const std::wstring& pipe_sender_name,
                                const std::wstring& pipe_receiver_name) {
     execution_thread.start(pipe_sender_name, pipe_receiver_name);
     return ValidHandle1;
@@ -226,7 +225,7 @@ struct SaveAsAdminImplFixture : public ::testing::Test {
 TEST_F(SaveAsAdminImplFixture, WriteFileIsHooked) {
   const auto remove_files =
       FileAutoremover({TestFileNameA1, TestFileNameA1_Hooked});
-  EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _, _))
+  EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _))
       .WillOnce(Invoke(this, &SaveAsAdminImplFixture::start_execute_thread1));
 
   const char* TestData = "Test_data";
@@ -243,7 +242,7 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHooked) {
 TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecauseNotAllowed) {
 	const auto remove_files =
 		FileAutoremover({ TestFileNameA1, TestFileNameA1_Hooked });
-	EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _, _)).Times(0);
+	EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _)).Times(0);
 
 	HANDLE handle = CreateFileW(TestFileNameW1.c_str(), GENERIC_WRITE, 0, NULL,
 		CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -257,7 +256,7 @@ TEST_F(SaveAsAdminImplFixture, WriteFileIsHookedButNotProcessedBecauseNotNeeded)
 	original_functions.allow_create();
 	const auto remove_files =
 		FileAutoremover({ TestFileNameA1, TestFileNameA1_Hooked });
-	EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _, _)).Times(0);
+	EXPECT_CALL(mock_admin_access_runner, run_admin_access(_, _)).Times(0);
 
 	const char* TestData = "Test_data";
 

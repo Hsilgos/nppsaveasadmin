@@ -60,10 +60,12 @@ after_build:
             if($env:PLATFORM -eq "x64") {
                 $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x64.zip"
                 7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin64\NppSaveAsAdmin.dll"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin64\NppAdminAccess.exe"
             }
             if($env:PLATFORM -eq "x86") {
                 $ZipFileName = "NppSaveAsAdmin_$($env:APPVEYOR_BUILD_VERSION)_x86.zip"
                 7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppSaveAsAdmin.dll"
+                7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\bin\NppAdminAccess.exe"
             }
             7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\README.md"
             7z a $ZipFileName "$($env:APPVEYOR_BUILD_FOLDER)\NppSaveAsAdmin\license.txt"
@@ -98,16 +100,8 @@ artifacts:
   name: release_package
 - path: UnitTests/%CONFIGURATION%/UnitTests.exe
   name: Unit test x86 binary
-- path: NppSaveAsAdmin/vs.proj/x64/Debug/NppSaveAsAdmin.dll
-  name: x64 Debug binary
-- path: NppSaveAsAdmin/bin64/NppSaveAsAdmin.dll
-  name: x64 Release binary
 - path: UnitTests/x64/%CONFIGURATION%/UnitTests.exe
   name: Unit test x64 binary
-- path: NppSaveAsAdmin/bin/NppSaveAsAdmin.dll
-  name: x86 Release binary
-- path: NppSaveAsAdmin/vs.proj/Debug/NppSaveAsAdmin.dll
-  name: x86 Debug binary
 
 deploy:
     provider: GitHub

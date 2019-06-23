@@ -14,33 +14,34 @@ class SaveAsAdminImpl::Impl {
  public:
   Impl(AdminAccessRunner& admin_access_runner)
       : m_admin_access_runner(admin_access_runner) {
-    m_write_file =
-        inject_in_module("Kernel32.dll", WriteFile, make_injection_callback(*this, &Impl::write_file_hook));
-    
-    m_create_filew = inject_in_module("Kernel32.dll",
-        CreateFileW, make_injection_callback(*this, &Impl::create_file_w_hook));
-    m_get_file_type = inject_in_module("Kernel32.dll",
-        GetFileType, make_injection_callback(*this, &Impl::get_file_type_hook));
-    m_close_handle = inject_in_module("Kernel32.dll",
-        CloseHandle, make_injection_callback(*this, &Impl::close_handle_hook));
-	m_get_save_file_name_w = inject_in_module("Comdlg32.dll",
-		GetSaveFileNameW, make_injection_callback(*this, &Impl::get_save_file_name_hook));
+    m_write_file = inject_in_module(
+        "Kernel32.dll", WriteFile,
+        make_injection_callback(*this, &Impl::write_file_hook));
+
+    m_create_filew = inject_in_module(
+        "Kernel32.dll", CreateFileW,
+        make_injection_callback(*this, &Impl::create_file_w_hook));
+    m_get_file_type = inject_in_module(
+        "Kernel32.dll", GetFileType,
+        make_injection_callback(*this, &Impl::get_file_type_hook));
+    m_close_handle = inject_in_module(
+        "Kernel32.dll", CloseHandle,
+        make_injection_callback(*this, &Impl::close_handle_hook));
+    m_get_save_file_name_w = inject_in_module(
+        "Comdlg32.dll", GetSaveFileNameW,
+        make_injection_callback(*this, &Impl::get_save_file_name_hook));
   }
 
-  void allow_process_file() {
-	m_is_process_allowed = true;
-  }
+  void allow_process_file() { m_is_process_allowed = true; }
 
-  void cancel_process_file() {
-	m_is_process_allowed = false;
-  }
+  void cancel_process_file() { m_is_process_allowed = false; }
 
  private:
   BOOL write_file_hook(HANDLE file_handle,
-                     LPCVOID buffer,
-                     DWORD number_of_bytes_to_write,
-                     LPDWORD number_of_bytes_written,
-                     LPOVERLAPPED overlapped) {
+                       LPCVOID buffer,
+                       DWORD number_of_bytes_to_write,
+                       LPDWORD number_of_bytes_written,
+                       LPOVERLAPPED overlapped) {
     HandleMap::iterator it = m_file_handles.find(file_handle);
     if (it != m_file_handles.end()) {
       return execute_write_file(
@@ -55,12 +56,12 @@ class SaveAsAdminImpl::Impl {
   }
 
   HANDLE create_file_w_hook(LPCWSTR file_name,
-                         DWORD desired_access,
-                         DWORD share_mode,
-                         LPSECURITY_ATTRIBUTES security_attributes,
-                         DWORD creation_disposition,
-                         DWORD flags_and_attributes,
-                         HANDLE template_file) {
+                            DWORD desired_access,
+                            DWORD share_mode,
+                            LPSECURITY_ATTRIBUTES security_attributes,
+                            DWORD creation_disposition,
+                            DWORD flags_and_attributes,
+                            HANDLE template_file) {
     HANDLE result = m_create_filew->call_original(
         file_name, desired_access, share_mode, security_attributes,
         creation_disposition, flags_and_attributes, template_file);
@@ -75,11 +76,10 @@ class SaveAsAdminImpl::Impl {
           return INVALID_HANDLE_VALUE;
         }
 
-        DefaultOriginalFunctions default_original_functions(*this);
         new_handle->proc_handle = m_admin_access_runner.run_admin_access(
-            default_original_functions, new_handle->pipe_sender->get_name(),
+            new_handle->pipe_sender->get_name(),
             new_handle->pipe_receiver->get_name());
-        if (NULL == new_handle->proc_handle) {
+        if (INVALID_HANDLE_VALUE == new_handle->proc_handle) {
           return INVALID_HANDLE_VALUE;
         }
 
@@ -94,8 +94,8 @@ class SaveAsAdminImpl::Impl {
           return INVALID_HANDLE_VALUE;
         }
 
-		result = new_handle->proc_handle;
-        m_file_handles[new_handle->proc_handle] = std::move(new_handle);        
+        result = new_handle->proc_handle;
+        m_file_handles[new_handle->proc_handle] = std::move(new_handle);
       }
     }
 
@@ -103,8 +103,8 @@ class SaveAsAdminImpl::Impl {
   }
 
   BOOL get_save_file_name_hook(LPOPENFILENAMEW ofn) {
-	  ofn->Flags |= OFN_NOTESTFILECREATE;
-	  return m_get_save_file_name_w->call_original(ofn);
+    ofn->Flags |= OFN_NOTESTFILECREATE;
+    return m_get_save_file_name_w->call_original(ofn);
   }
 
   BOOL close_handle_hook(HANDLE handle) {
@@ -150,66 +150,33 @@ class SaveAsAdminImpl::Impl {
   injection_ptr_type(GetFileType) m_get_file_type;
   injection_ptr_type(CloseHandle) m_close_handle;
   injection_ptr_type(GetSaveFileNameW) m_get_save_file_name_w;
-
-  class DefaultOriginalFunctions : public IWinApiFunctions {
-   public:
-    DefaultOriginalFunctions(Impl& impl) : m_impl(impl) {}
-
-    BOOL write_file(HANDLE file_handle,
-                       LPCVOID buffer,
-                       DWORD number_of_bytes_to_write,
-                       LPDWORD number_of_bytes_written,
-                       LPOVERLAPPED overlapped) override {
-      return m_impl.m_write_file->call_original(
-          file_handle, buffer, number_of_bytes_to_write,
-          number_of_bytes_written, overlapped);
-    }
-
-    HANDLE create_file_w(LPCWSTR file_name,
-                           DWORD desired_access,
-                           DWORD share_mode,
-                           LPSECURITY_ATTRIBUTES security_attributes,
-                           DWORD creation_disposition,
-                           DWORD flags_and_attributes,
-                           HANDLE template_file) override {
-      return m_impl.m_create_filew->call_original(
-          file_name, desired_access, share_mode, security_attributes,
-          creation_disposition, flags_and_attributes, template_file);
-    }
-
-    BOOL close_handle(HANDLE object) override {
-      return m_impl.m_close_handle->call_original(object);
-    }
-
-    DWORD get_file_type(HANDLE file) override {
-      return m_impl.m_get_file_type->call_original(file);
-    }
-
-   private:
-    Impl& m_impl;
-  };
 };
 
 namespace {
 class DefaultAdminAccessRunner : public AdminAccessRunner {
-  HANDLE run_admin_access(IWinApiFunctions& original_functions,
-                          const std::wstring& pipe_sender_name,
+ public:
+  DefaultAdminAccessRunner(std::wstring exe_path)
+      : m_exe_path(std::move(exe_path)) {}
+
+ private:
+  HANDLE run_admin_access(const std::wstring& pipe_sender_name,
                           const std::wstring& pipe_receiver_name) override {
-    return run_admin_access_app(original_functions, pipe_sender_name,
+    return run_admin_access_app(m_exe_path, pipe_sender_name,
                                 pipe_receiver_name);
   }
+
+ private:
+  std::wstring m_exe_path;
 };
 }  // namespace
 
 AdminAccessRunner::~AdminAccessRunner() = default;
 
-AdminAccessRunner& get_default_admin_access_runner() {
-  static DefaultAdminAccessRunner default_admin_access_runner;
-  return default_admin_access_runner;
+std::unique_ptr<AdminAccessRunner> AdminAccessRunner::make_default(
+    std::wstring admin_runner_exe_path) {
+  return std::unique_ptr<AdminAccessRunner>(
+      new DefaultAdminAccessRunner(std::move(admin_runner_exe_path)));
 }
-
-SaveAsAdminImpl::SaveAsAdminImpl()
-    : SaveAsAdminImpl(get_default_admin_access_runner()) {}
 
 SaveAsAdminImpl::SaveAsAdminImpl(AdminAccessRunner& admin_access_runner)
     : m_impl(std::make_unique<Impl>(admin_access_runner)) {}
