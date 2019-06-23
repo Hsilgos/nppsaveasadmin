@@ -140,7 +140,7 @@ TEST_P(WriteFileParametrizedTest, CreateWriteCloseFileAndGetType) {
   DWORD number_of_bytes_written = 0;
   EXPECT_TRUE(execute_write_file(
       *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
-      file_handle, buffer_to_write.c_str(), buffer_to_write.size(),
+      file_handle, buffer_to_write.c_str(), get_size_as_ulong(buffer_to_write),
       &number_of_bytes_written));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
   EXPECT_EQ(FILE_TYPE_DISK, execute_get_file_type(
@@ -165,7 +165,7 @@ INSTANTIATE_TEST_CASE_P(WriteFileTestSequence,
 TEST_F(WriteFileFixture, ValidData_NoPtrToWritten) {
   EXPECT_TRUE(execute_write_file(*execution_thread.pipe_sender,
                                  *execution_thread.pipe_receiver, file_handle,
-                                 TestBuffer.c_str(), TestBuffer.size(), NULL));
+                                 TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL));
   EXPECT_EQ(ERROR_SUCCESS, GetLastError());
   EXPECT_EQ(FILE_TYPE_DISK, execute_get_file_type(
                                 *execution_thread.pipe_sender,
@@ -196,7 +196,7 @@ TEST_F(WriteFileFixture, NoBuffer) {
   DWORD number_of_bytes_written = 0;
   EXPECT_FALSE(execute_write_file(
       *execution_thread.pipe_sender, *execution_thread.pipe_receiver,
-      file_handle, NULL, TestBuffer.size(), &number_of_bytes_written));
+      file_handle, NULL, get_size_as_ulong(TestBuffer), &number_of_bytes_written));
   EXPECT_EQ(ERROR_INVALID_USER_BUFFER, GetLastError());
   EXPECT_EQ(0, number_of_bytes_written);
   SetLastError(ERROR_SUCCESS);
@@ -205,7 +205,7 @@ TEST_F(WriteFileFixture, NoBuffer) {
 TEST_F(WriteFileFixture, NoBuffer_NoPtrToWritten) {
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  NULL, TestBuffer.size(), NULL));
+                                  NULL, get_size_as_ulong(TestBuffer), NULL));
   EXPECT_EQ(ERROR_INVALID_USER_BUFFER, GetLastError());
   SetLastError(ERROR_SUCCESS);
 }
@@ -328,7 +328,7 @@ TEST_F(CorruptedDataFixture, WriteFileCorruptedData) {
   DWORD number_of_bytes_written = 0;
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(),
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                                   &number_of_bytes_written));
   EXPECT_EQ(BadDataInBuffer, execution_thread.wait());
 }
@@ -342,7 +342,7 @@ TEST_F(CorruptedDataFixture, WriteFileCorruptedData_NoPtrToWritten) {
   EXPECT_CALL(*mock_command, execute(_, _)).WillOnce(Return(false));
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(), NULL));
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL));
   EXPECT_EQ(BadDataInBuffer, execution_thread.wait());
 }
 
@@ -351,7 +351,7 @@ TEST_F(CorruptedDataFixture, WriteFileNoSuchCommandRegistered) {
   execution_thread.command_manager.erase_command(WriteFileCmd);
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(), NULL));
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL));
   EXPECT_EQ(UnknownCommand, execution_thread.wait());
 }
 
@@ -361,11 +361,11 @@ TEST_F(CorruptedDataFixture, WriteFileReturnedCorruptedDataLess) {
   DWORD number_of_bytes_written = 0;
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(),
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                                   &number_of_bytes_written));
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(), NULL));
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL));
 }
 
 TEST_F(CorruptedDataFixture, WriteFileReturnedCorruptedDataMore) {
@@ -374,11 +374,11 @@ TEST_F(CorruptedDataFixture, WriteFileReturnedCorruptedDataMore) {
   DWORD number_of_bytes_written = 0;
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(),
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer),
                                   &number_of_bytes_written));
   EXPECT_FALSE(execute_write_file(*execution_thread.pipe_sender,
                                   *execution_thread.pipe_receiver, file_handle,
-                                  TestBuffer.c_str(), TestBuffer.size(), NULL));
+                                  TestBuffer.c_str(), get_size_as_ulong(TestBuffer), NULL));
 }
 
 TEST_F(CorruptedDataFixture, CloseHandleReturnedCorruptedDataLess) {

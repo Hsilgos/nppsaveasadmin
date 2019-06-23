@@ -36,7 +36,8 @@ bool dump_admin_access(IWinApiFunctions& winapi, std::wstring& path) {
 
   const BOOL write_result =
       winapi.write_file(file, get_NppAdminAccess_buffer_ptr(),
-                        get_NppAdminAccess_buffer_length(), &written, NULL);
+                        static_cast<DWORD>(get_NppAdminAccess_buffer_length()),
+						&written, NULL);
 
   winapi.close_handle(file);
 
