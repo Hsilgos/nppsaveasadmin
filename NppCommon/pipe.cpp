@@ -26,29 +26,23 @@ const int MaxBufferSize = 1024 * 4;
 
 //////////////////////////////////////////////////////////////////////////
 
-Pipe::Pipe(HANDLE pipe, std::wstring name)
-    : m_pipe(pipe), m_name(std::move(name)) {}
+Pipe::Pipe(UniqueHandle<> pipe, std::wstring name)
+    : m_pipe(std::move(pipe)), m_name(std::move(name)) {}
 
-Pipe::~Pipe() {
-  if (m_pipe && m_pipe != INVALID_HANDLE_VALUE) {
-    CloseHandle(m_pipe);
-  }
-}
-
-std::unique_ptr<Pipe> Pipe::create(HANDLE pipe, std::wstring name) {
-  return std::unique_ptr<Pipe>(new Pipe(pipe, name));
+std::unique_ptr<Pipe> Pipe::create(UniqueHandle<> pipe, std::wstring name) {
+  return std::unique_ptr<Pipe>(new Pipe(std::move(pipe), name));
 }
 
 std::unique_ptr<Pipe> Pipe::create(const std::wstring& name) {
-  HANDLE pipe = CreateNamedPipe(
+  UniqueHandle<> pipe(CreateNamedPipe(
       name.c_str(),                                  // pipe's name
       PIPE_ACCESS_DUPLEX /*|FILE_FLAG_OVERLAPPED*/,  //
-      PIPE_TYPE_BYTE, 1, MaxBufferSize, MaxBufferSize, 10000, NULL);
+      PIPE_TYPE_BYTE, 1, MaxBufferSize, MaxBufferSize, 10000, NULL));
 
-  if (pipe == INVALID_HANDLE_VALUE)
+  if (!pipe)
     return nullptr;
 
-  return create(pipe, name);
+  return create(std::move(pipe), name);
 }
 
 std::unique_ptr<Pipe> Pipe::create_unique() {
@@ -63,16 +57,16 @@ std::unique_ptr<Pipe> Pipe::create_unique() {
 }
 
 std::unique_ptr<Pipe> Pipe::open(const std::wstring& name) {
-  HANDLE pipe =
+  UniqueHandle<> pipe(
       CreateFile(name.c_str(),                  // pipe's name
                  GENERIC_READ | GENERIC_WRITE,  // only need read access
                  FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                 FILE_ATTRIBUTE_NORMAL, NULL);
+                 FILE_ATTRIBUTE_NORMAL, NULL));
 
-  if (pipe == INVALID_HANDLE_VALUE)
+  if (!pipe)
     return nullptr;
 
-  return create(pipe, name);
+  return create(std::move(pipe), name);
 }
 
 bool Pipe::read(std::vector<char>& data) {
@@ -80,7 +74,7 @@ bool Pipe::read(std::vector<char>& data) {
   data.resize(MaxBufferSize);
   const DWORD buffer_size = static_cast<DWORD>(data.size());
   const bool result =
-      TRUE == ReadFile(m_pipe, data.data(), buffer_size, &read_size, NULL);
+      TRUE == ReadFile(*m_pipe, data.data(), buffer_size, &read_size, NULL);
   data.resize(result ? read_size : 0);
   return result;
 }
@@ -89,7 +83,7 @@ bool Pipe::write(const std::vector<char>& data) {
   DWORD written = 0;
   const DWORD buffer_size = static_cast<DWORD>(data.size());
   const BOOL result =
-      WriteFile(m_pipe, data.data(), buffer_size, &written, NULL);
+      WriteFile(*m_pipe, data.data(), buffer_size, &written, NULL);
   return TRUE == result && written == data.size();
 }
 
@@ -98,5 +92,5 @@ const std::wstring& Pipe::get_name() const {
 }
 
 bool Pipe::wait() const {
-  return TRUE == ConnectNamedPipe(m_pipe, NULL);
+  return TRUE == ConnectNamedPipe(*m_pipe, NULL);
 }

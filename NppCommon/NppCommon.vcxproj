@@ -22,6 +22,7 @@
     <ClInclude Include="Common.hpp" />
     <ClInclude Include="IWinApiFunctions.hpp" />
     <ClInclude Include="Pipe.hpp" />
+    <ClInclude Include="UniqueHandle.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Pipe.cpp" />

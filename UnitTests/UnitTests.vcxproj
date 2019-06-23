@@ -171,6 +171,7 @@
     <ClCompile Include="TestInjection.cpp" />
     <ClCompile Include="TestPipe.cpp" />
     <ClCompile Include="TestSaveAsAdminImpl.cpp" />
+    <ClCompile Include="TestUniqueHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NppAdminAccessLib\NppAdminAccessLib.vcxproj">
