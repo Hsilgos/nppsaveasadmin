@@ -28,7 +28,11 @@ void un_do_injection() {
 	g_save_as_admin_impl.reset();
 }
 
-std::wstring get_module_path(HANDLE hModule) {
+bool is_admin_app_exists() {
+	return file_exists(g_admin_app_path);
+}
+
+std::wstring get_module_path(HINSTANCE hModule) {
 	using Buffer = std::array<TCHAR, 2048>;
 	Buffer module_file = { { 0 } };
 	const int result_size =
@@ -36,7 +40,7 @@ std::wstring get_module_path(HANDLE hModule) {
 	return std::wstring(module_file.data(), result_size);
 }
 
-std::wstring get_admin_app_path(HANDLE hModule) {
+std::wstring get_admin_app_path(HINSTANCE hModule) {
 	std::wstring module_path = get_module_path(hModule);
 	const auto sep_position = module_path.find_last_of(L"\\/");
 	if (sep_position != std::wstring::npos) {
@@ -48,14 +52,14 @@ std::wstring get_admin_app_path(HANDLE hModule) {
 
 //////////////////////////////////////////////////////////////////////////
 
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID /*lpReserved*/) {
+BOOL APIENTRY DllMain(HINSTANCE hModule, DWORD reasonForCall, LPVOID /*lpReserved*/) {
   switch (reasonForCall) {
     case DLL_PROCESS_ATTACH:
+	  pluginInit(hModule);
+
 	  g_admin_app_path = get_admin_app_path(hModule);
-	  if (!g_admin_app_path.empty()) {
-		  pluginInit(hModule);
-		  do_injection();
-	  }
+	  do_injection();
+
       break;
 
     case DLL_PROCESS_DETACH:
