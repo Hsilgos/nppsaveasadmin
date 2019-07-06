@@ -21,6 +21,10 @@
 
 #include "plugin/SaveAsAdminVersion.hpp"
 
+#include "Resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION	SAVE_AS_ADMIN_VERSION_DIGITAL
 PRODUCTVERSION	SAVE_AS_ADMIN_VERSION_DIGITAL
@@ -49,3 +53,37 @@ BEGIN
 		END
 	END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT_SAVE_AS_ADMIN DIALOGEX 0, 0, 303, 185
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save as Admin plugin"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Close",IDCLOSE,126,164,50,14,WS_GROUP
+    CONTROL         "Custom1",IDC_SCINTILLA,"Scintilla",WS_TABSTOP,0,7,291,153
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUT_SAVE_AS_ADMIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 296
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+END
+#endif    // APSTUDIO_INVOKED
