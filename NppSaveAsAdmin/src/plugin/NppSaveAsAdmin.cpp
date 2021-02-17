@@ -53,27 +53,31 @@ std::wstring get_admin_app_path(HINSTANCE hModule) {
 //////////////////////////////////////////////////////////////////////////
 
 BOOL APIENTRY DllMain(HINSTANCE hModule, DWORD reasonForCall, LPVOID /*lpReserved*/) {
-  switch (reasonForCall) {
-    case DLL_PROCESS_ATTACH:
-	  pluginInit(hModule);
+	try {
+		switch (reasonForCall) {
+		case DLL_PROCESS_ATTACH:
+			pluginInit(hModule);
 
-	  g_admin_app_path = get_admin_app_path(hModule);
-	  do_injection();
+			g_admin_app_path = get_admin_app_path(hModule);
+			do_injection();
 
-      break;
+			break;
 
-    case DLL_PROCESS_DETACH:
-      commandMenuCleanUp();
-      pluginCleanUp();
-      un_do_injection();
-      break;
+		case DLL_PROCESS_DETACH:
+			commandMenuCleanUp();
+			pluginCleanUp();
+			un_do_injection();
+			break;
 
-    case DLL_THREAD_ATTACH:
-      break;
+		case DLL_THREAD_ATTACH:
+			break;
 
-    case DLL_THREAD_DETACH:
-      break;
-  }
+		case DLL_THREAD_DETACH:
+			break;
+		}
+	} catch (...) {
+		return FALSE;
+	}
 
   return TRUE;
 }
