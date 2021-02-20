@@ -130,16 +130,8 @@ struct SaveAsAdminImplFixture : public ::testing::Test {
   MockAdminAccessRunner mock_admin_access_runner;
   SaveAsAdminImpl save_as_admin_impl;
 
-  void ensure_that_comdlg32_dll_is_imported() {
-	  std::ifstream file("none_existing.file");
-	  if (file) {
-		  GetSaveFileNameW(NULL);
-	  }
-  }
-
   SaveAsAdminImplFixture()
       : execution_thread(false), save_as_admin_impl(mock_admin_access_runner) {
-	ensure_that_comdlg32_dll_is_imported();
     ON_CALL(mock_winapi_rename, create_file_a(_, _, _, _, _, _, _))
         .WillByDefault(
             Invoke(this, &SaveAsAdminImplFixture::create_file_a_rename));

@@ -27,9 +27,6 @@ class SaveAsAdminImpl::Impl {
     m_close_handle = inject_in_module(
         "Kernel32.dll", CloseHandle,
         make_injection_callback(*this, &Impl::close_handle_hook));
-    m_get_save_file_name_w = inject_in_module(
-        "Comdlg32.dll", GetSaveFileNameW,
-        make_injection_callback(*this, &Impl::get_save_file_name_hook));
   }
 
   void allow_process_file() { m_is_process_allowed = true; }
@@ -102,11 +99,6 @@ class SaveAsAdminImpl::Impl {
     return result;
   }
 
-  BOOL get_save_file_name_hook(LPOPENFILENAMEW ofn) {
-    ofn->Flags |= OFN_NOTESTFILECREATE;
-    return m_get_save_file_name_w->call_original(ofn);
-  }
-
   BOOL close_handle_hook(HANDLE handle) {
     HandleMap::iterator it = m_file_handles.find(handle);
     if (it != m_file_handles.end()) {
@@ -149,7 +141,6 @@ class SaveAsAdminImpl::Impl {
   injection_ptr_type(CreateFileW) m_create_filew;
   injection_ptr_type(GetFileType) m_get_file_type;
   injection_ptr_type(CloseHandle) m_close_handle;
-  injection_ptr_type(GetSaveFileNameW) m_get_save_file_name_w;
 };
 
 namespace {
