@@ -51,7 +51,7 @@ jobs:
         echo "PLATFORM_FOLDER=%PLATFORM_FOLDER%"
         echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
         echo "GITHUB_WORKSPACE=%GITHUB_WORKSPACE%"
-        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX="%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER%" -G "%CMAKE_COMPILER%" ..
+        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
         IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
         cmake --build . --target install --config ${{ matrix.build_configuration }}
