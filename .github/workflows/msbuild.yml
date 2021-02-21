@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Install CMake
       uses: jwlawson/actions-setup-cmake@v1.7
       with:
@@ -35,12 +35,14 @@ jobs:
       with:
         repository: 'google/googletest'
         ref: 'release-1.8.1'
+        path: 'googletest'
     
     - name: Build GTest
       shell: cmd
       run: |
-        md googletest\build
-        cd googletest\build
+        cd googletest
+        md build
+        cd build
         IF "${{ matrix.platform }}"=="Win32" (
           SET PLATFORM_FOLDER=x86
           SET CMAKE_COMPILER="Visual Studio 15 2017"
