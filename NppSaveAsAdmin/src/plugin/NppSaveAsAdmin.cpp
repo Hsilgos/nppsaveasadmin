@@ -122,7 +122,7 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode) {
 					g_recorded_initialisation_error.c_str(),
 					"SaveAsAdmin initialisation failed",
 					MB_OKCANCEL | MB_ICONWARNING | MB_DEFBUTTON2);
-			// Don't bother user with repeated errors
+			// Don't bother user with repeated errors.
 			g_recorded_initialisation_error.clear();
 			if (warning_result == IDOK) {
 				about();
