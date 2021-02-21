@@ -37,16 +37,16 @@ jobs:
         ref: 'release-1.8.1'
     
     - name: Build GTest
+      shell: cmd
       run: |
         mkdir googletest/build
         cd googletest/build
-        if [ "${{ matrix.platform }}" = "Win32" ]; then
-          PLATFORM_FOLDER=x86
-          CMAKE_COMPILER="Visual Studio 15 2017"
-        else
-          PLATFORM_FOLDER=x64
-          CMAKE_COMPILER="Visual Studio 15 2017 Win64"
-        fi
+        IF "%PLATFORM%"=="x86" (
+          SET PLATFORM_FOLDER=x86
+          SET CMAKE_COMPILER="Visual Studio 15 2017")
+        ELSE (
+          SET PLATFORM_FOLDER=x64
+          SET CMAKE_COMPILER="Visual Studio 15 2017 Win64")
         cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=${{env.GITHUB_WORKSPACE}}\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
         cmake --build . --target install --config ${{ matrix.build_configuration }}
 
