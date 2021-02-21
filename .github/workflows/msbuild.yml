@@ -80,9 +80,11 @@ jobs:
       run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:GTestPath=%GITHUB_WORKSPACE%\googletest_release /p:AssemblySearchPaths=googletest_release\include ${{env.SOLUTION_FILE_PATH}}
 
     - name: Unit test x64
+      shell: cmd
       # if: matrix.platform == 'x64'
       run: %GITHUB_WORKSPACE%\UnitTests\x64\${{ matrix.build_configuration }}\UnitTests.exe
 
     - name: Unit test Win32
+      shell: cmd
       # if: matrix.platform == 'Win32'
       run: %GITHUB_WORKSPACE%\UnitTests\${{ matrix.build_configuration }}\UnitTests.exe
