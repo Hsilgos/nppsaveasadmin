@@ -15,12 +15,33 @@ namespace {
 std::wstring g_admin_app_path;
 std::unique_ptr<AdminAccessRunner> g_admin_access_runner;
 std::unique_ptr<SaveAsAdminImpl> g_save_as_admin_impl;
+std::string g_recorded_initialisation_error;
+}
+
+std::string make_initialisation_error(const std::string& reason) {
+	std::string error_text = "Failed to initialise SaveAsAdmin plugin with ";
+	if (!reason.empty()) {
+		error_text.append("error: ").append(reason);
+	}
+	else {
+		error_text.append("undefined error.");
+	}
+	error_text.append("\nFunctionality is disabled, please contact author to fix the problem");
+	return error_text;
 }
 
 void do_injection() {
 	if (!g_save_as_admin_impl) {
 		g_admin_access_runner = AdminAccessRunner::make_default(g_admin_app_path);
-		g_save_as_admin_impl = std::make_unique<SaveAsAdminImpl>(*g_admin_access_runner);
+		try {
+			g_save_as_admin_impl = std::make_unique<SaveAsAdminImpl>(*g_admin_access_runner);
+		}
+		catch (const std::exception& exc) {
+			g_recorded_initialisation_error = make_initialisation_error(exc.what());
+		}
+		catch (...) {
+			g_recorded_initialisation_error = make_initialisation_error(std::string{});
+		}
 	}
 }
 
@@ -94,6 +115,20 @@ extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF) {
 
 extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode) {
   switch (notifyCode->nmhdr.code) {
+    case NPPN_READY:
+		if (!g_save_as_admin_impl && !g_recorded_initialisation_error.empty()) {
+			const int warning_result =
+				MessageBoxA(static_cast<HWND>(notifyCode->nmhdr.hwndFrom),
+					g_recorded_initialisation_error.c_str(),
+					"SaveAsAdmin initialisation failed",
+					MB_OKCANCEL | MB_ICONWARNING | MB_DEFBUTTON2);
+			// Don't bother user with repeated errors
+			g_recorded_initialisation_error.clear();
+			if (warning_result == IDOK) {
+				about();
+			}
+		}
+	  break;
     case NPPN_FILEBEFORESAVE:
 		if (g_save_as_admin_impl) {
 			g_save_as_admin_impl->allow_process_file();
