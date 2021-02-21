@@ -64,6 +64,10 @@ jobs:
 
         cd ../..
 
+    - name: Update version
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: python GenerateVersionHeader.py 1.1.${{env.GITHUB_RUN_NUMBER}} > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
       #with:
@@ -80,13 +84,11 @@ jobs:
       run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:GTestPath=%GITHUB_WORKSPACE%\googletest_release /p:AssemblySearchPaths=googletest_release\include ${{env.SOLUTION_FILE_PATH}}
 
     - name: Unit test x64
-      shell: cmd
       working-directory: ${{env.GITHUB_WORKSPACE}}
       if: matrix.platform == 'x64'
       run: UnitTests\x64\${{ matrix.build_configuration }}\UnitTests.exe
 
     - name: Unit test Win32
-      shell: cmd
       working-directory: ${{env.GITHUB_WORKSPACE}}
       if: matrix.platform == 'Win32'
       run: UnitTests\${{ matrix.build_configuration }}\UnitTests.exe
