@@ -41,7 +41,7 @@ jobs:
       run: |
         md googletest\build
         cd googletest\build
-        IF "%PLATFORM%"=="x86" (
+        IF "${{ matrix.platform }}"=="x86" (
           SET PLATFORM_FOLDER=x86
           SET CMAKE_COMPILER="Visual Studio 15 2017"
         ) ELSE (
@@ -52,7 +52,16 @@ jobs:
         echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
         echo "GITHUB_WORKSPACE=%GITHUB_WORKSPACE%"
         cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
+        IF %ERRORLEVEL% NEQ 0 (
+          echo "Failed to configure GTest"
+          exit 1
+        )
+
         cmake --build . --target install --config ${{ matrix.build_configuration }}
+        IF %ERRORLEVEL% NEQ 0 (
+          echo "Failed to build GTest"
+          exit 1
+        )
         cd ../..
 
     - name: Add MSBuild to PATH
