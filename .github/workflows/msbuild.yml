@@ -28,7 +28,7 @@ jobs:
     - name: Install CMake
       uses: jwlawson/actions-setup-cmake@v1.7
       with:
-        cmake-version: '3.7.2'
+        cmake-version: '3.19.3'
     
     - name: Checkout GTest
       uses: actions/checkout@v2
@@ -52,6 +52,9 @@ jobs:
         echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
         echo "GITHUB_WORKSPACE=%GITHUB_WORKSPACE%"
         cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
+        IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+        
+        cmake --build . --config ${{ matrix.build_configuration }}
         IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
         cmake --build . --target install --config ${{ matrix.build_configuration }}
