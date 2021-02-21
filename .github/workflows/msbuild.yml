@@ -28,7 +28,7 @@ jobs:
     - name: Install CMake
       uses: jwlawson/actions-setup-cmake@v1.7
       with:
-        cmake-version: '3.19.3'
+        cmake-version: '3.7.2'
     
     - name: Checkout GTest
       uses: actions/checkout@v2
