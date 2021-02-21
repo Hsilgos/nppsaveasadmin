@@ -48,7 +48,7 @@ jobs:
           SET PLATFORM_FOLDER=x64
           SET CMAKE_COMPILER="Visual Studio 15 2017 Win64"
         )
-        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=${{env.GITHUB_WORKSPACE}}\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
+        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
         cmake --build . --target install --config ${{ matrix.build_configuration }}
         cd ../..
 
