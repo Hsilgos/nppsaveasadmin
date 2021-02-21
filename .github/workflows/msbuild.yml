@@ -44,16 +44,14 @@ jobs:
         md build
         cd build
         IF "${{ matrix.platform }}"=="Win32" (
-          SET PLATFORM_FOLDER=x86
           SET CMAKE_COMPILER="Visual Studio 15 2017"
         ) ELSE (
-          SET PLATFORM_FOLDER=x64
           SET CMAKE_COMPILER="Visual Studio 15 2017 Win64"
         )
         echo "PLATFORM_FOLDER=%PLATFORM_FOLDER%"
         echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
         echo "GITHUB_WORKSPACE=%GITHUB_WORKSPACE%"
-        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
+        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release -G %CMAKE_COMPILER% ..
         IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
         
         cmake --build . --config ${{ matrix.build_configuration }}
@@ -79,4 +77,4 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:AssemblySearchPaths=%GITHUB_WORKSPACE%\googletest_release\include ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:AssemblySearchPaths=googletest_release\include ${{env.SOLUTION_FILE_PATH}}
