@@ -39,8 +39,8 @@ jobs:
     - name: Build GTest
       shell: cmd
       run: |
-        mkdir googletest/build
-        cd googletest/build
+        md googletest\build
+        cd googletest\build
         IF "%PLATFORM%"=="x86" (
           SET PLATFORM_FOLDER=x86
           SET CMAKE_COMPILER="Visual Studio 15 2017"
