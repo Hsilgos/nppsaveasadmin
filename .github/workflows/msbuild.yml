@@ -79,4 +79,4 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:AssemblySearchPaths=${{env.GITHUB_WORKSPACE}}\googletest_release\include ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:AssemblySearchPaths=%GITHUB_WORKSPACE%\googletest_release\include ${{env.SOLUTION_FILE_PATH}}
