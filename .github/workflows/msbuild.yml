@@ -78,3 +78,11 @@ jobs:
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:GTestPath=%GITHUB_WORKSPACE%\googletest_release /p:AssemblySearchPaths=googletest_release\include ${{env.SOLUTION_FILE_PATH}}
+
+     - name: Unit test x64
+       if: matrix.platform == 'x64'
+       run: %GITHUB_WORKSPACE%\UnitTests\x64\${{ matrix.build_configuration }}\UnitTests.exe
+
+     - name: Unit test Win32
+       if: matrix.platform == 'Win32'
+       run: %GITHUB_WORKSPACE%\UnitTests\${{ matrix.build_configuration }}\UnitTests.exe
