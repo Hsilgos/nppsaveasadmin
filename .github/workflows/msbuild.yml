@@ -24,6 +24,31 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Install CMake
+      uses: jwlawson/actions-setup-cmake@v1.7
+      with:
+        cmake-version: '3.19.3'
+    
+    - name: Checkout GTest
+      uses: actions/checkout@v2
+      with:
+        repository: 'google/googletest'
+        ref: 'release-1.8.1'
+    
+    - name: Build GTest
+      run: |
+        mkdir googletest/build
+        cd googletest/build
+        if [ "${{ matrix.platform }}" = "Win32" ]; then
+          PLATFORM_FOLDER=x86
+          CMAKE_COMPILER="Visual Studio 15 2017"
+        else
+          PLATFORM_FOLDER=x64
+          CMAKE_COMPILER="Visual Studio 15 2017 Win64"
+        fi
+        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=${{env.GITHUB_WORKSPACE}}\googletest_release\%PLATFORM_FOLDER% -G %CMAKE_COMPILER% ..
+        cmake --build . --target install --config ${{ matrix.build_configuration }
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
