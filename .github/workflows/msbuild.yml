@@ -1,0 +1,89 @@
+name: MSBuild
+
+on: [push]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: UnitTests/UnitTests.vcxproj
+
+jobs:
+  build:
+    runs-on: windows-2016
+    
+    strategy:
+      matrix:
+        platform: [Win32, x64]
+        build_configuration: [Release, Debug]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install CMake
+      uses: jwlawson/actions-setup-cmake@v1.7
+      with:
+        cmake-version: '3.19.3'
+    
+    - name: Checkout GTest
+      uses: actions/checkout@v2
+      with:
+        repository: 'google/googletest'
+        ref: 'release-1.8.1'
+        path: 'googletest'
+    
+    - name: Build GTest
+      shell: cmd
+      run: |
+        cd googletest
+        md build
+        cd build
+        IF "${{ matrix.platform }}"=="Win32" (
+          SET CMAKE_COMPILER="Visual Studio 15 2017"
+        ) ELSE (
+          SET CMAKE_COMPILER="Visual Studio 15 2017 Win64"
+        )
+        echo "PLATFORM_FOLDER=%PLATFORM_FOLDER%"
+        echo "CMAKE_COMPILER=%CMAKE_COMPILER%"
+        echo "GITHUB_WORKSPACE=%GITHUB_WORKSPACE%"
+        cmake -Dgtest_force_shared_crt=OFF -DCMAKE_INSTALL_PREFIX=%GITHUB_WORKSPACE%\googletest_release -G %CMAKE_COMPILER% ..
+        IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+        
+        cmake --build . --config ${{ matrix.build_configuration }}
+        IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+        
+        dir /b
+
+        cmake --build . --target install --config ${{ matrix.build_configuration }}
+        IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+        cd ../..
+
+    - name: Update version
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      shell: cmd
+      run: |
+        set NEW_VERSION="1.1.%GITHUB_RUN_NUMBER%"
+        echo Version: %NEW_VERSION%
+        python GenerateVersionHeader.py %NEW_VERSION% > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1
+      #with:
+      #  vs-version: '[15.1, 15.9.16]'
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{ matrix.build_configuration }} /p:platform=${{ matrix.platform }} /p:GTestPath=%GITHUB_WORKSPACE%\googletest_release /p:AssemblySearchPaths=googletest_release\include ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Unit test x64
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      if: matrix.platform == 'x64'
+      run: UnitTests\x64\${{ matrix.build_configuration }}\UnitTests.exe
+
+    - name: Unit test Win32
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      if: matrix.platform == 'Win32'
+      run: UnitTests\${{ matrix.build_configuration }}\UnitTests.exe
