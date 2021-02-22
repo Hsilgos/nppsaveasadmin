@@ -68,7 +68,9 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       shell: cmd
       run: |
-        python GenerateVersionHeader.py 1.1.%GITHUB_RUN_NUMBER% > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
+        set NEW_VERSION="1.1.%GITHUB_RUN_NUMBER%"
+        echo Version: %NEW_VERSION%
+        python GenerateVersionHeader.py %NEW_VERSION% > NppSaveAsAdmin\src\plugin\SaveAsAdminVersion.hpp
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
