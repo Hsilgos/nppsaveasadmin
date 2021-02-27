@@ -151,7 +151,7 @@ TEST_P(WriteFileParametrizedTest, CreateWriteCloseFileAndGetType) {
   close_file();
   check_file_content(buffer_to_write);
 }
-INSTANTIATE_TEST_CASE_P(WriteFileTestSequence,
+INSTANTIATE_TEST_SUITE_P(WriteFileTestSequence,
                         WriteFileParametrizedTest,
                         ::testing::Values(20,
                                           WriteFileData::MaxBufferSize,
